@@ -39,6 +39,7 @@ type (
 
 	employee struct {
 		IdNumber   int
+		isFaculty  bool
 		FirstName  string
 		MiddleName string
 		LastName   string
@@ -50,7 +51,7 @@ type (
 		Error string
 	}
 
-	apiAddEmployeeBody struct {
+	apiAddEmployeeBodyRes struct {
 		IdNumber   int
 		isFaculty  bool
 		FirstName  string
@@ -58,19 +59,20 @@ type (
 		LastName   string
 	}
 
-	apiAddEmployeeRes struct {
-		IdNumber  int
-		isFaculty bool
-	}
-
 	apiRemoveEmployeeBodyRes struct {
 		IdNumber  int
 		isFaculty bool
 	}
 
-	apiUpdateScheduleBody struct {
+	apiUpdateScheduleBodyRes struct {
 		IdNumber  int
 		isFaculty bool
 		Schedule  employeeSchedule
+	}
+
+	apiGetAllYearsScheduleRes struct {
+		IdNumber  int
+		isFaculty bool
+		Schedules []employeeSchedule
 	}
 )

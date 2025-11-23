@@ -2,11 +2,15 @@ package main
 
 import (
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 func apiAddEmployee(w http.ResponseWriter, r *http.Request) {
-	body := apiAddEmployeeBody{}
+	body := apiAddEmployeeBodyRes{}
 	if decodeBody(w, r.Body, &body) != nil {
 		return
 	}
@@ -22,10 +26,7 @@ func apiAddEmployee(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encodeRes(w, &apiAddEmployeeRes{
-		IdNumber:  body.IdNumber,
-		isFaculty: body.isFaculty,
-	})
+	encodeRes(w, body)
 }
 
 func apiRemoveEmployee(w http.ResponseWriter, r *http.Request) {
@@ -44,7 +45,7 @@ func apiRemoveEmployee(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiUpdateSchedule(w http.ResponseWriter, r *http.Request) {
-	body := apiUpdateScheduleBody{}
+	body := apiUpdateScheduleBodyRes{}
 	if decodeBody(w, r.Body, &body) != nil {
 		return
 	}
@@ -54,4 +55,50 @@ func apiUpdateSchedule(w http.ResponseWriter, r *http.Request) {
 		errorRes(w, updateErr.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	encodeRes(w, body)
+}
+
+func apiGetAllYearsSchedule(w http.ResponseWriter, r *http.Request) {
+	httpVars := mux.Vars(r)
+
+	employeeType, httpVarUnescapeErr := url.QueryUnescape(httpVars["employeeType"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	idNumber, httpVarUnescapeErr := url.QueryUnescape(httpVars["idNumber"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var isFaculty bool
+	switch strings.ToLower(employeeType) {
+	case "staff":
+		isFaculty = false
+	case "faculty":
+		isFaculty = true
+	default:
+		errorRes(w, "Not a valid employee type", http.StatusBadRequest)
+		return
+	}
+
+	employeeSchedules, getScheduleErr := getEmployeeAllYearsSchedule(idNumber, isFaculty)
+	if getScheduleErr != nil {
+		errorRes(w, getScheduleErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	idNumberInt, idNumberConvertErr := strconv.Atoi(idNumber)
+	if idNumberConvertErr != nil {
+		errorRes(w, idNumberConvertErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	encodeRes(w, apiGetAllYearsScheduleRes{
+		IdNumber:  idNumberInt,
+		isFaculty: isFaculty,
+		Schedules: employeeSchedules,
+	})
 }

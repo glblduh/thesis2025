@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/json"
+	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.etcd.io/bbolt"
@@ -111,7 +114,7 @@ func updateEmployeeSchedule(idNumber string, isFaculty bool, schedule employeeSc
 		employeeType = "Faculty"
 	}
 
-	schoolYear := strconv.Itoa(schedule.SchoolYear.StartYear) + strconv.Itoa(schedule.SchoolYear.EndYear)
+	schoolYear := strconv.Itoa(schedule.SchoolYear.StartYear) + "-" + strconv.Itoa(schedule.SchoolYear.EndYear)
 
 	return db.Update(func(tx *bbolt.Tx) error {
 		scheduleBucket := tx.Bucket([]byte(employeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule"))
@@ -158,4 +161,123 @@ func updateEmployeeSchedule(idNumber string, isFaculty bool, schedule employeeSc
 
 		return nil
 	})
+}
+
+func verifyEmployee(idNumber string) (employee, error) {
+	employeeStruct := employee{}
+
+	db, dbErr := openDB()
+	if dbErr != nil {
+		return employeeStruct, dbErr
+	}
+	defer db.Close()
+
+	employeeCheckErr := db.View(func(tx *bbolt.Tx) error {
+		staffBucket := tx.Bucket([]byte("Staff"))
+		facultyBucket := tx.Bucket([]byte("Faculty"))
+
+		staffCheck := staffBucket.Bucket([]byte(idNumber))
+		facultyCheck := facultyBucket.Bucket([]byte(idNumber))
+
+		if staffCheck == nil && facultyCheck == nil {
+			return errors.New("id number not found")
+		}
+
+		idNumberInt, idNumberConvertErr := strconv.Atoi(idNumber)
+		if idNumberConvertErr != nil {
+			return idNumberConvertErr
+		}
+
+		if staffCheck != nil {
+			employeeStruct = employeeInfoDBToStruct(staffBucket.Bucket([]byte(idNumber)), idNumberInt, false)
+			return nil
+		}
+
+		employeeStruct = employeeInfoDBToStruct(facultyBucket.Bucket([]byte(idNumber)), idNumberInt, true)
+		return nil
+	})
+	if employeeCheckErr != nil {
+		return employeeStruct, employeeCheckErr
+	}
+
+	return employeeStruct, nil
+}
+
+func getEmployeeAllYearsSchedule(idNumber string, isFaculty bool) ([]employeeSchedule, error) {
+	allYearsSchedule := []employeeSchedule{}
+
+	_, verifyErr := verifyEmployee(idNumber)
+	if verifyErr != nil {
+		return allYearsSchedule, verifyErr
+	}
+
+	db, dbErr := openDB()
+	if dbErr != nil {
+		return nil, dbErr
+	}
+	defer db.Close()
+
+	employeeType := "Staff"
+	if isFaculty {
+		employeeType = "Faculty"
+	}
+
+	scheduleIterateErr := db.View(func(tx *bbolt.Tx) error {
+		employeeScheduleBucket := tx.Bucket([]byte(employeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule"))
+
+		cursor := employeeScheduleBucket.Cursor()
+
+		for key, _ := cursor.First(); key != nil; key, _ = cursor.Next() {
+			currentYearSchedule := employeeSchedule{}
+			schoolYear := strings.Split(string(key), "-")
+			schoolYearStart, schoolYearConvertErr := strconv.Atoi(schoolYear[0])
+			if schoolYearConvertErr != nil {
+				return schoolYearConvertErr
+			}
+			schoolYearEnd, schoolYearConvertErr := strconv.Atoi(schoolYear[1])
+			if schoolYearConvertErr != nil {
+				return schoolYearConvertErr
+			}
+			schoolYearStruct := schoolYearRange{
+				StartYear: schoolYearStart,
+				EndYear:   schoolYearEnd,
+			}
+
+			currentYearSchedule.SchoolYear = schoolYearStruct
+
+			currentKeyCursor := employeeScheduleBucket.Bucket(key).Cursor()
+			for dayKey, dayValue := currentKeyCursor.First(); dayKey != nil; dayKey, dayValue = currentKeyCursor.Next() {
+				currentDaySchedule := dayTimeRange{}
+
+				dayValueUnmarshalErr := json.Unmarshal(dayValue, &currentDaySchedule)
+				if dayValueUnmarshalErr != nil {
+					return dayValueUnmarshalErr
+				}
+
+				switch string(dayKey) {
+				case "Monday":
+					currentYearSchedule.Monday = currentDaySchedule
+				case "Tuesday":
+					currentYearSchedule.Tuesday = currentDaySchedule
+				case "Wednesday":
+					currentYearSchedule.Wednesday = currentDaySchedule
+				case "Thursday":
+					currentYearSchedule.Thursday = currentDaySchedule
+				case "Friday":
+					currentYearSchedule.Friday = currentDaySchedule
+				case "Saturday":
+					currentYearSchedule.Saturday = currentDaySchedule
+				case "Sunday":
+					currentYearSchedule.Sunday = currentDaySchedule
+				}
+			}
+			allYearsSchedule = append(allYearsSchedule, currentYearSchedule)
+		}
+		return nil
+	})
+	if scheduleIterateErr != nil {
+		return nil, scheduleIterateErr
+	}
+
+	return allYearsSchedule, nil
 }

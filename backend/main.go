@@ -9,7 +9,9 @@ func main() {
 	httpRouter := mux.NewRouter().StrictSlash(true)
 
 	httpRouter.HandleFunc("/api/addemployee", apiAddEmployee).Methods("POST")
-	httpRouter.HandleFunc("/api/updateschedule", apiAddEmployee).Methods("POST")
+	httpRouter.HandleFunc("/api/updateschedule", apiUpdateSchedule).Methods("POST")
 
-	httpRouter.HandleFunc("/api/removeemployee", apiAddEmployee).Methods("DELETE")
+	httpRouter.HandleFunc("/api/removeemployee", apiRemoveEmployee).Methods("DELETE")
+
+	httpRouter.HandleFunc("/api/getallschedule/{employeeType}/{idNumber}", apiGetAllYearsSchedule).Methods("GET")
 }
