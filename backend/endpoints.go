@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -73,14 +72,9 @@ func apiGetAllYearsSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var isFaculty bool
-	switch strings.ToLower(employeeType) {
-	case "staff":
-		isFaculty = false
-	case "faculty":
-		isFaculty = true
-	default:
-		errorRes(w, "Not a valid employee type", http.StatusBadRequest)
+	isFaculty, isFacultyCheckErr := checkIfFaculty(employeeType)
+	if isFacultyCheckErr != nil {
+		errorRes(w, isFacultyCheckErr.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -100,5 +94,49 @@ func apiGetAllYearsSchedule(w http.ResponseWriter, r *http.Request) {
 		IdNumber:  idNumberInt,
 		isFaculty: isFaculty,
 		Schedules: employeeSchedules,
+	})
+}
+
+func apiGetSchedule(w http.ResponseWriter, r *http.Request) {
+	httpVars := mux.Vars(r)
+
+	employeeType, httpVarUnescapeErr := url.QueryUnescape(httpVars["employeeType"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	idNumber, httpVarUnescapeErr := url.QueryUnescape(httpVars["idNumber"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	schoolYearRequest, httpVarUnescapeErr := url.QueryUnescape(httpVars["idNumber"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	isFaculty, isFacultyCheckErr := checkIfFaculty(employeeType)
+	if isFacultyCheckErr != nil {
+		errorRes(w, isFacultyCheckErr.Error(), http.StatusBadRequest)
+		return
+	}
+
+	employeeSchedule, getScheduleErr := getEmployeeSchedule(idNumber, isFaculty, schoolYearRequest)
+	if getScheduleErr != nil {
+		errorRes(w, getScheduleErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	idNumberInt, idNumberConvertErr := strconv.Atoi(idNumber)
+	if idNumberConvertErr != nil {
+		errorRes(w, idNumberConvertErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	encodeRes(w, apiGetScheduleRes{
+		IdNumber:  idNumberInt,
+		isFaculty: isFaculty,
+		Schedule:  employeeSchedule,
 	})
 }

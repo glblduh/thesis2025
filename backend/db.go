@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"strconv"
 	"strings"
@@ -247,28 +246,9 @@ func getEmployeeAllYearsSchedule(idNumber string, isFaculty bool) ([]employeeSch
 
 			currentKeyCursor := employeeScheduleBucket.Bucket(key).Cursor()
 			for dayKey, dayValue := currentKeyCursor.First(); dayKey != nil; dayKey, dayValue = currentKeyCursor.Next() {
-				currentDaySchedule := dayTimeRange{}
-
-				dayValueUnmarshalErr := json.Unmarshal(dayValue, &currentDaySchedule)
-				if dayValueUnmarshalErr != nil {
-					return dayValueUnmarshalErr
-				}
-
-				switch string(dayKey) {
-				case "Monday":
-					currentYearSchedule.Monday = currentDaySchedule
-				case "Tuesday":
-					currentYearSchedule.Tuesday = currentDaySchedule
-				case "Wednesday":
-					currentYearSchedule.Wednesday = currentDaySchedule
-				case "Thursday":
-					currentYearSchedule.Thursday = currentDaySchedule
-				case "Friday":
-					currentYearSchedule.Friday = currentDaySchedule
-				case "Saturday":
-					currentYearSchedule.Saturday = currentDaySchedule
-				case "Sunday":
-					currentYearSchedule.Sunday = currentDaySchedule
+				scheduleConvertGetErr := dayScheduleDBToStruct(dayKey, dayValue, &currentYearSchedule)
+				if scheduleConvertGetErr != nil {
+					return scheduleConvertGetErr
 				}
 			}
 			allYearsSchedule = append(allYearsSchedule, currentYearSchedule)
@@ -280,4 +260,59 @@ func getEmployeeAllYearsSchedule(idNumber string, isFaculty bool) ([]employeeSch
 	}
 
 	return allYearsSchedule, nil
+}
+
+func getEmployeeSchedule(idNumber string, isFaculty bool, schoolYear string) (employeeSchedule, error) {
+	employeeSchedule := employeeSchedule{}
+
+	_, verifyErr := verifyEmployee(idNumber)
+	if verifyErr != nil {
+		return employeeSchedule, verifyErr
+	}
+
+	db, dbErr := openDB()
+	if dbErr != nil {
+		return employeeSchedule, dbErr
+	}
+	defer db.Close()
+
+	employeeType := "Staff"
+	if isFaculty {
+		employeeType = "Faculty"
+	}
+
+	scheduleIterateErr := db.View(func(tx *bbolt.Tx) error {
+		schoolYearBucket := tx.Bucket([]byte(employeeType)).Bucket([]byte(idNumber)).Bucket([]byte(schoolYear))
+		if schoolYearBucket == nil {
+			return errors.New("school year not found")
+		}
+
+		schoolYear := strings.Split(schoolYear, "-")
+		schoolYearStart, schoolYearConvertErr := strconv.Atoi(schoolYear[0])
+		if schoolYearConvertErr != nil {
+			return schoolYearConvertErr
+		}
+		schoolYearEnd, schoolYearConvertErr := strconv.Atoi(schoolYear[1])
+		if schoolYearConvertErr != nil {
+			return schoolYearConvertErr
+		}
+		employeeSchedule.SchoolYear = schoolYearRange{
+			StartYear: schoolYearStart,
+			EndYear:   schoolYearEnd,
+		}
+
+		schoolYearCursor := schoolYearBucket.Cursor()
+		for dayKey, dayValue := schoolYearCursor.First(); dayKey != nil; dayKey, dayValue = schoolYearCursor.Next() {
+			scheduleConvertGetErr := dayScheduleDBToStruct(dayKey, dayValue, &employeeSchedule)
+			if scheduleConvertGetErr != nil {
+				return scheduleConvertGetErr
+			}
+		}
+		return nil
+	})
+	if scheduleIterateErr != nil {
+		return employeeSchedule, scheduleIterateErr
+	}
+
+	return employeeSchedule, nil
 }

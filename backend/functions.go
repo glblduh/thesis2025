@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
+	"strings"
 
 	"go.etcd.io/bbolt"
 )
@@ -61,4 +63,45 @@ func employeeInfoDBToStruct(employeeBucket *bbolt.Bucket, idNumber int, isFacult
 		MiddleName: string(employeeBucket.Get([]byte("MiddleName"))),
 		LastName:   string(employeeBucket.Get([]byte("Name"))),
 	}
+}
+
+func dayScheduleDBToStruct(dayKey []byte, dayValue []byte, currentYearSchedule *employeeSchedule) error {
+	currentDaySchedule := dayTimeRange{}
+
+	dayValueUnmarshalErr := json.Unmarshal(dayValue, &currentDaySchedule)
+	if dayValueUnmarshalErr != nil {
+		return dayValueUnmarshalErr
+	}
+
+	switch string(dayKey) {
+	case "Monday":
+		currentYearSchedule.Monday = currentDaySchedule
+	case "Tuesday":
+		currentYearSchedule.Tuesday = currentDaySchedule
+	case "Wednesday":
+		currentYearSchedule.Wednesday = currentDaySchedule
+	case "Thursday":
+		currentYearSchedule.Thursday = currentDaySchedule
+	case "Friday":
+		currentYearSchedule.Friday = currentDaySchedule
+	case "Saturday":
+		currentYearSchedule.Saturday = currentDaySchedule
+	case "Sunday":
+		currentYearSchedule.Sunday = currentDaySchedule
+	}
+
+	return nil
+}
+
+func checkIfFaculty(employeeType string) (bool, error) {
+	var isFaculty bool
+	switch strings.ToLower(employeeType) {
+	case "staff":
+		isFaculty = false
+	case "faculty":
+		isFaculty = true
+	default:
+		return false, errors.New("not a valid employee type")
+	}
+	return isFaculty, nil
 }

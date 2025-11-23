@@ -14,4 +14,5 @@ func main() {
 	httpRouter.HandleFunc("/api/removeemployee", apiRemoveEmployee).Methods("DELETE")
 
 	httpRouter.HandleFunc("/api/getallschedule/{employeeType}/{idNumber}", apiGetAllYearsSchedule).Methods("GET")
+	httpRouter.HandleFunc("/api/getschedule/{employeeType}/{idNumber}/{schoolYear}", apiGetSchedule).Methods("GET")
 }

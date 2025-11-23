@@ -75,4 +75,10 @@ type (
 		isFaculty bool
 		Schedules []employeeSchedule
 	}
+
+	apiGetScheduleRes struct {
+		IdNumber  int
+		isFaculty bool
+		Schedule  employeeSchedule
+	}
 )
