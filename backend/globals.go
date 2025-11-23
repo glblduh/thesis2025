@@ -18,7 +18,8 @@ type (
 		EndYear   int
 	}
 
-	timeRange struct {
+	dayTimeRange struct {
+		dontChange      bool
 		StartTimeHour   int
 		StartTimeMinute int
 		EndTimeHour     int
@@ -27,13 +28,13 @@ type (
 
 	employeeSchedule struct {
 		SchoolYear schoolYearRange
-		Monday     timeRange
-		Tuesday    timeRange
-		Wednesday  timeRange
-		Thursday   timeRange
-		Friday     timeRange
-		Saturday   timeRange
-		Sunday     timeRange
+		Monday     dayTimeRange
+		Tuesday    dayTimeRange
+		Wednesday  dayTimeRange
+		Thursday   dayTimeRange
+		Friday     dayTimeRange
+		Saturday   dayTimeRange
+		Sunday     dayTimeRange
 	}
 
 	employee struct {

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+
+	"go.etcd.io/bbolt"
 )
 
 func encodeRes(w http.ResponseWriter, v any) error {
@@ -31,4 +33,22 @@ func decodeBody(w http.ResponseWriter, body io.Reader, v any) error {
 		errorRes(w, "JSON Encoder error", http.StatusInternalServerError)
 	}
 	return err
+}
+
+func writeDaySchedule(schoolYearBucket *bbolt.Bucket, dayName string, daySchedule dayTimeRange) error {
+	if daySchedule.dontChange {
+		return nil
+	}
+
+	dayScheduleByte, scheduleMarshalErr := json.Marshal(daySchedule)
+	if scheduleMarshalErr != nil {
+		return scheduleMarshalErr
+	}
+
+	daySchedulePutErr := schoolYearBucket.Put([]byte(dayName), dayScheduleByte)
+	if daySchedulePutErr != nil {
+		return scheduleMarshalErr
+	}
+
+	return nil
 }

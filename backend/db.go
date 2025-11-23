@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"strconv"
 	"time"
 
@@ -114,35 +113,6 @@ func updateEmployeeSchedule(idNumber string, isFaculty bool, schedule employeeSc
 
 	schoolYear := strconv.Itoa(schedule.SchoolYear.StartYear) + strconv.Itoa(schedule.SchoolYear.EndYear)
 
-	mondaySchedule, scheduleMarshalErr := json.Marshal(schedule.Monday)
-	if scheduleMarshalErr != nil {
-		return scheduleMarshalErr
-	}
-	tuesdaySchedule, scheduleMarshalErr := json.Marshal(schedule.Tuesday)
-	if scheduleMarshalErr != nil {
-		return scheduleMarshalErr
-	}
-	wednesdaySchedule, scheduleMarshalErr := json.Marshal(schedule.Wednesday)
-	if scheduleMarshalErr != nil {
-		return scheduleMarshalErr
-	}
-	thursdaySchedule, scheduleMarshalErr := json.Marshal(schedule.Thursday)
-	if scheduleMarshalErr != nil {
-		return scheduleMarshalErr
-	}
-	fridaySchedule, scheduleMarshalErr := json.Marshal(schedule.Friday)
-	if scheduleMarshalErr != nil {
-		return scheduleMarshalErr
-	}
-	saturdaySchedule, scheduleMarshalErr := json.Marshal(schedule.Saturday)
-	if scheduleMarshalErr != nil {
-		return scheduleMarshalErr
-	}
-	sundaySchedule, scheduleMarshalErr := json.Marshal(schedule.Sunday)
-	if scheduleMarshalErr != nil {
-		return scheduleMarshalErr
-	}
-
 	return db.Update(func(tx *bbolt.Tx) error {
 		scheduleBucket := tx.Bucket([]byte(employeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule"))
 		schoolYearBucket, schoolYearBucketErr := scheduleBucket.CreateBucketIfNotExists([]byte(schoolYear))
@@ -151,31 +121,37 @@ func updateEmployeeSchedule(idNumber string, isFaculty bool, schedule employeeSc
 		}
 
 		var scheduleAddErr error
-		scheduleAddErr = schoolYearBucket.Put([]byte("Monday"), mondaySchedule)
+		scheduleAddErr = writeDaySchedule(schoolYearBucket, "Monday", schedule.Monday)
 		if scheduleAddErr != nil {
 			return scheduleAddErr
 		}
-		scheduleAddErr = schoolYearBucket.Put([]byte("Tuesday"), tuesdaySchedule)
+
+		scheduleAddErr = writeDaySchedule(schoolYearBucket, "Tuesday", schedule.Tuesday)
 		if scheduleAddErr != nil {
 			return scheduleAddErr
 		}
-		scheduleAddErr = schoolYearBucket.Put([]byte("Wednesday"), wednesdaySchedule)
+
+		scheduleAddErr = writeDaySchedule(schoolYearBucket, "Wednesday", schedule.Wednesday)
 		if scheduleAddErr != nil {
 			return scheduleAddErr
 		}
-		scheduleAddErr = schoolYearBucket.Put([]byte("Thursday"), thursdaySchedule)
+
+		scheduleAddErr = writeDaySchedule(schoolYearBucket, "Thursday", schedule.Thursday)
 		if scheduleAddErr != nil {
 			return scheduleAddErr
 		}
-		scheduleAddErr = schoolYearBucket.Put([]byte("Friday"), fridaySchedule)
+
+		scheduleAddErr = writeDaySchedule(schoolYearBucket, "Friday", schedule.Friday)
 		if scheduleAddErr != nil {
 			return scheduleAddErr
 		}
-		scheduleAddErr = schoolYearBucket.Put([]byte("Saturday"), saturdaySchedule)
+
+		scheduleAddErr = writeDaySchedule(schoolYearBucket, "Saturday", schedule.Saturday)
 		if scheduleAddErr != nil {
 			return scheduleAddErr
 		}
-		scheduleAddErr = schoolYearBucket.Put([]byte("Sunday"), sundaySchedule)
+
+		scheduleAddErr = writeDaySchedule(schoolYearBucket, "Sunday", schedule.Sunday)
 		if scheduleAddErr != nil {
 			return scheduleAddErr
 		}
