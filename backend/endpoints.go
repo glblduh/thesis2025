@@ -61,20 +61,9 @@ func apiUpdateSchedule(w http.ResponseWriter, r *http.Request) {
 func apiGetAllYearsSchedule(w http.ResponseWriter, r *http.Request) {
 	httpVars := mux.Vars(r)
 
-	employeeType, httpVarUnescapeErr := url.QueryUnescape(httpVars["employeeType"])
-	if httpVarUnescapeErr != nil {
-		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
-		return
-	}
 	idNumber, httpVarUnescapeErr := url.QueryUnescape(httpVars["idNumber"])
 	if httpVarUnescapeErr != nil {
 		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	isFaculty, isFacultyCheckErr := checkIfFaculty(employeeType)
-	if isFacultyCheckErr != nil {
-		errorRes(w, isFacultyCheckErr.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -92,7 +81,6 @@ func apiGetAllYearsSchedule(w http.ResponseWriter, r *http.Request) {
 
 	encodeRes(w, apiGetAllYearsScheduleRes{
 		IdNumber:  idNumberInt,
-		IsFaculty: isFaculty,
 		Schedules: employeeSchedules,
 	})
 }

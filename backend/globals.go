@@ -89,13 +89,11 @@ type (
 
 	apiGetAllYearsScheduleRes struct {
 		IdNumber  int
-		IsFaculty bool
 		Schedules []employeeSchedule
 	}
 
 	apiGetScheduleRes struct {
-		IdNumber  int
-		IsFaculty bool
-		Schedule  employeeSchedule
+		IdNumber int
+		Schedule employeeSchedule
 	}
 )
