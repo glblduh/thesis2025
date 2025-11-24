@@ -1,6 +1,11 @@
 package main
 
-import "github.com/gorilla/mux"
+import (
+	"net/http"
+
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
+)
 
 func main() {
 	Info.Println("Initializing database")
@@ -16,4 +21,11 @@ func main() {
 	httpRouter.HandleFunc("/api/getallschedule/{idNumber}", apiGetAllYearsSchedule).Methods("GET")
 	httpRouter.HandleFunc("/api/getschedule/{idNumber}/{schoolYear}", apiGetSchedule).Methods("GET")
 	httpRouter.HandleFunc("/api/getemployee/{idNumber}", apiGetEmployee).Methods("GET")
+
+	httpCors := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"GET", "POST", "DELETE"},
+	}).Handler(httpRouter)
+
+	Error.Fatalln(http.ListenAndServe(":8080", httpCors))
 }
