@@ -72,7 +72,7 @@ type (
 
 	apiAddEmployeeBodyRes struct {
 		IdNumber   int
-		isFaculty  bool
+		IsFaculty  bool
 		FirstName  string
 		MiddleName string
 		LastName   string
@@ -89,13 +89,13 @@ type (
 
 	apiGetAllYearsScheduleRes struct {
 		IdNumber  int
-		isFaculty bool
+		IsFaculty bool
 		Schedules []employeeSchedule
 	}
 
 	apiGetScheduleRes struct {
 		IdNumber  int
-		isFaculty bool
+		IsFaculty bool
 		Schedule  employeeSchedule
 	}
 )

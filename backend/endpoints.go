@@ -14,7 +14,7 @@ func apiAddEmployee(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	addErr := addEmployee(strconv.Itoa(body.IdNumber), body.isFaculty, employee{
+	addErr := addEmployee(strconv.Itoa(body.IdNumber), body.IsFaculty, employee{
 		FirstName:  body.FirstName,
 		MiddleName: body.MiddleName,
 		LastName:   body.LastName,
@@ -92,7 +92,7 @@ func apiGetAllYearsSchedule(w http.ResponseWriter, r *http.Request) {
 
 	encodeRes(w, apiGetAllYearsScheduleRes{
 		IdNumber:  idNumberInt,
-		isFaculty: isFaculty,
+		IsFaculty: isFaculty,
 		Schedules: employeeSchedules,
 	})
 }
