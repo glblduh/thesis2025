@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"strconv"
 	"strings"
@@ -64,6 +65,10 @@ func addEmployee(idNumber string, isFaculty bool, employeeStruct employee) error
 		if lastNamePutErr != nil {
 			return lastNamePutErr
 		}
+		employeeTypePutErr := bucket.Put([]byte("EmployeeType"), []byte(employeeType))
+		if employeeTypePutErr != nil {
+			return employeeTypePutErr
+		}
 		_, scheduleBucketErr := bucket.CreateBucketIfNotExists([]byte("Schedule"))
 		if scheduleBucketErr != nil {
 			return scheduleBucketErr
@@ -84,39 +89,39 @@ func addEmployee(idNumber string, isFaculty bool, employeeStruct employee) error
 	})
 }
 
-func removeEmployee(idNumber string, isFaculty bool) error {
+func removeEmployee(idNumber string) error {
+	employeeStruct, verifyErr := getEmployee(idNumber)
+	if verifyErr != nil {
+		return verifyErr
+	}
+
 	db, dbErr := openDB()
 	if dbErr != nil {
 		return dbErr
 	}
 	defer db.Close()
 
-	employeeType := "Staff"
-	if isFaculty {
-		employeeType = "Faculty"
-	}
-
 	return db.Update(func(tx *bbolt.Tx) error {
-		return tx.Bucket([]byte(employeeType)).DeleteBucket([]byte(idNumber))
+		return tx.Bucket([]byte(employeeStruct.EmployeeType)).DeleteBucket([]byte(idNumber))
 	})
 }
 
-func updateEmployeeSchedule(idNumber string, isFaculty bool, schedule employeeSchedule) error {
+func updateEmployeeSchedule(idNumber string, schedule employeeSchedule) error {
+	employeeStruct, verifyErr := getEmployee(idNumber)
+	if verifyErr != nil {
+		return verifyErr
+	}
+
 	db, dbErr := openDB()
 	if dbErr != nil {
 		return dbErr
 	}
 	defer db.Close()
-
-	employeeType := "Staff"
-	if isFaculty {
-		employeeType = "Faculty"
-	}
 
 	schoolYear := strconv.Itoa(schedule.SchoolYear.StartYear) + "-" + strconv.Itoa(schedule.SchoolYear.EndYear)
 
 	return db.Update(func(tx *bbolt.Tx) error {
-		scheduleBucket := tx.Bucket([]byte(employeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule"))
+		scheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule"))
 		schoolYearBucket, schoolYearBucketErr := scheduleBucket.CreateBucketIfNotExists([]byte(schoolYear))
 		if schoolYearBucketErr != nil {
 			return schoolYearBucketErr
@@ -162,7 +167,7 @@ func updateEmployeeSchedule(idNumber string, isFaculty bool, schedule employeeSc
 	})
 }
 
-func verifyEmployee(idNumber string) (employee, error) {
+func getEmployee(idNumber string) (employee, error) {
 	employeeStruct := employee{}
 
 	db, dbErr := openDB()
@@ -202,10 +207,10 @@ func verifyEmployee(idNumber string) (employee, error) {
 	return employeeStruct, nil
 }
 
-func getEmployeeAllYearsSchedule(idNumber string, isFaculty bool) ([]employeeSchedule, error) {
+func getEmployeeAllYearsSchedule(idNumber string) ([]employeeSchedule, error) {
 	allYearsSchedule := []employeeSchedule{}
 
-	_, verifyErr := verifyEmployee(idNumber)
+	employeeStruct, verifyErr := getEmployee(idNumber)
 	if verifyErr != nil {
 		return allYearsSchedule, verifyErr
 	}
@@ -216,13 +221,8 @@ func getEmployeeAllYearsSchedule(idNumber string, isFaculty bool) ([]employeeSch
 	}
 	defer db.Close()
 
-	employeeType := "Staff"
-	if isFaculty {
-		employeeType = "Faculty"
-	}
-
 	scheduleIterateErr := db.View(func(tx *bbolt.Tx) error {
-		employeeScheduleBucket := tx.Bucket([]byte(employeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule"))
+		employeeScheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule"))
 
 		cursor := employeeScheduleBucket.Cursor()
 
@@ -262,10 +262,10 @@ func getEmployeeAllYearsSchedule(idNumber string, isFaculty bool) ([]employeeSch
 	return allYearsSchedule, nil
 }
 
-func getEmployeeSchedule(idNumber string, isFaculty bool, schoolYear string) (employeeSchedule, error) {
+func getEmployeeSchedule(idNumber string, schoolYear string) (employeeSchedule, error) {
 	employeeSchedule := employeeSchedule{}
 
-	_, verifyErr := verifyEmployee(idNumber)
+	employeeStruct, verifyErr := getEmployee(idNumber)
 	if verifyErr != nil {
 		return employeeSchedule, verifyErr
 	}
@@ -276,13 +276,8 @@ func getEmployeeSchedule(idNumber string, isFaculty bool, schoolYear string) (em
 	}
 	defer db.Close()
 
-	employeeType := "Staff"
-	if isFaculty {
-		employeeType = "Faculty"
-	}
-
 	scheduleIterateErr := db.View(func(tx *bbolt.Tx) error {
-		schoolYearBucket := tx.Bucket([]byte(employeeType)).Bucket([]byte(idNumber)).Bucket([]byte(schoolYear))
+		schoolYearBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte(schoolYear))
 		if schoolYearBucket == nil {
 			return errors.New("school year not found")
 		}
@@ -315,4 +310,53 @@ func getEmployeeSchedule(idNumber string, isFaculty bool, schoolYear string) (em
 	}
 
 	return employeeSchedule, nil
+}
+
+func addAttendance(idNumber string, attendanceTime attendance) error {
+	employeeStruct, verifyErr := getEmployee(idNumber)
+	if verifyErr != nil {
+		return verifyErr
+	}
+
+	db, dbErr := openDB()
+	if dbErr != nil {
+		return dbErr
+	}
+	defer db.Close()
+
+	return db.Update(func(tx *bbolt.Tx) error {
+		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Attendance"))
+
+		currentYear, currentMonth, currentDay := time.Now().Date()
+		currentDate := strconv.Itoa(int(currentMonth)) + "-" + strconv.Itoa(int(currentDay)) + "-" + strconv.Itoa(int(currentYear))
+
+		currentDateBucket, currentDateBucketCreateErr := attendanceBucket.CreateBucketIfNotExists([]byte(currentDate))
+		if currentDateBucketCreateErr != nil {
+			return currentDateBucketCreateErr
+		}
+
+		if !attendanceTime.TimeIn.DontChange {
+			timeInByte, timeInMarshalErr := json.Marshal(attendanceTime.TimeIn)
+			if timeInMarshalErr != nil {
+				return timeInMarshalErr
+			}
+			timeInPutErr := currentDateBucket.Put([]byte("TimeIn"), timeInByte)
+			if timeInPutErr != nil {
+				return timeInPutErr
+			}
+		}
+
+		if !attendanceTime.TimeOut.DontChange {
+			timeOutByte, timeOutMarshalErr := json.Marshal(attendanceTime.TimeOut)
+			if timeOutMarshalErr != nil {
+				return timeOutMarshalErr
+			}
+			timeOutPutErr := currentDateBucket.Put([]byte("TimeOut"), timeOutByte)
+			if timeOutPutErr != nil {
+				return timeOutPutErr
+			}
+		}
+
+		return nil
+	})
 }

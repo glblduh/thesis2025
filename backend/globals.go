@@ -19,7 +19,7 @@ type (
 	}
 
 	dayTimeRange struct {
-		dontChange      bool
+		DontChange      bool
 		StartTimeHour   int
 		StartTimeMinute int
 		EndTimeHour     int
@@ -38,11 +38,30 @@ type (
 	}
 
 	employee struct {
-		IdNumber   int
-		isFaculty  bool
-		FirstName  string
-		MiddleName string
-		LastName   string
+		IdNumber     int
+		IsFaculty    bool
+		EmployeeType string
+		FirstName    string
+		MiddleName   string
+		LastName     string
+	}
+
+	attendanceTime struct {
+		DontChange bool
+		Hour       int
+		Minute     int
+		Unix       int
+	}
+
+	attendance struct {
+		TimeIn  attendanceTime
+		TimeOut attendanceTime
+	}
+
+	dayDate struct {
+		Year  int
+		Month int
+		Day   int
 	}
 )
 
@@ -60,14 +79,12 @@ type (
 	}
 
 	apiRemoveEmployeeBodyRes struct {
-		IdNumber  int
-		isFaculty bool
+		IdNumber int
 	}
 
 	apiUpdateScheduleBodyRes struct {
-		IdNumber  int
-		isFaculty bool
-		Schedule  employeeSchedule
+		IdNumber int
+		Schedule employeeSchedule
 	}
 
 	apiGetAllYearsScheduleRes struct {
