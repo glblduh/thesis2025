@@ -77,10 +77,6 @@ func addEmployee(idNumber string, isFaculty bool, employeeStruct employee) error
 		if attendanceBucketErr != nil {
 			return attendanceBucketErr
 		}
-		_, absenceBucketErr := bucket.CreateBucketIfNotExists([]byte("Absence"))
-		if absenceBucketErr != nil {
-			return absenceBucketErr
-		}
 		_, leaveBucketErr := bucket.CreateBucketIfNotExists([]byte("Leave"))
 		if leaveBucketErr != nil {
 			return leaveBucketErr
@@ -325,14 +321,26 @@ func addAttendance(idNumber string, attendanceTime attendance) error {
 	defer db.Close()
 
 	return db.Update(func(tx *bbolt.Tx) error {
+		currentYear, currentMonth, currentDay := time.Now().Date()
+		currentYearString := strconv.Itoa(currentYear)
+		currentMonthString := strconv.Itoa(int(currentMonth))
+		currentDayString := strconv.Itoa(currentDay)
+
 		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Attendance"))
 
-		currentYear, currentMonth, currentDay := time.Now().Date()
-		currentDate := strconv.Itoa(int(currentMonth)) + "-" + strconv.Itoa(int(currentDay)) + "-" + strconv.Itoa(int(currentYear))
+		yearBucket, yearBucketErr := attendanceBucket.CreateBucketIfNotExists([]byte(currentYearString))
+		if yearBucketErr != nil {
+			return yearBucketErr
+		}
 
-		currentDateBucket, currentDateBucketCreateErr := attendanceBucket.CreateBucketIfNotExists([]byte(currentDate))
-		if currentDateBucketCreateErr != nil {
-			return currentDateBucketCreateErr
+		monthBucket, monthBucketErr := yearBucket.CreateBucketIfNotExists([]byte(currentMonthString))
+		if monthBucketErr != nil {
+			return monthBucketErr
+		}
+
+		dayBucket, dayBucketErr := monthBucket.CreateBucketIfNotExists([]byte(currentDayString))
+		if dayBucketErr != nil {
+			return dayBucketErr
 		}
 
 		if !attendanceTime.TimeIn.DontChange {
@@ -340,7 +348,7 @@ func addAttendance(idNumber string, attendanceTime attendance) error {
 			if timeInMarshalErr != nil {
 				return timeInMarshalErr
 			}
-			timeInPutErr := currentDateBucket.Put([]byte("TimeIn"), timeInByte)
+			timeInPutErr := dayBucket.Put([]byte("TimeIn"), timeInByte)
 			if timeInPutErr != nil {
 				return timeInPutErr
 			}
@@ -351,7 +359,7 @@ func addAttendance(idNumber string, attendanceTime attendance) error {
 			if timeOutMarshalErr != nil {
 				return timeOutMarshalErr
 			}
-			timeOutPutErr := currentDateBucket.Put([]byte("TimeOut"), timeOutByte)
+			timeOutPutErr := dayBucket.Put([]byte("TimeOut"), timeOutByte)
 			if timeOutPutErr != nil {
 				return timeOutPutErr
 			}
