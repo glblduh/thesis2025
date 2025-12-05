@@ -54,6 +54,8 @@ type (
 	}
 
 	attendance struct {
+		State   string
+		Reason  string
 		TimeIn  attendanceTime
 		TimeOut attendanceTime
 	}

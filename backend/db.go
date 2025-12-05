@@ -77,10 +77,6 @@ func addEmployee(idNumber string, isFaculty bool, employeeStruct employee) error
 		if attendanceBucketErr != nil {
 			return attendanceBucketErr
 		}
-		_, leaveBucketErr := bucket.CreateBucketIfNotExists([]byte("Leave"))
-		if leaveBucketErr != nil {
-			return leaveBucketErr
-		}
 		return nil
 	})
 }
@@ -308,7 +304,7 @@ func getEmployeeSchedule(idNumber string, schoolYear string) (employeeSchedule, 
 	return employeeSchedule, nil
 }
 
-func addAttendance(idNumber string, attendanceTime attendance) error {
+func addAttendance(idNumber string, isLeave bool, leaveReason string, attendanceTime attendance) error {
 	employeeStruct, verifyErr := getEmployee(idNumber)
 	if verifyErr != nil {
 		return verifyErr
@@ -343,12 +339,17 @@ func addAttendance(idNumber string, attendanceTime attendance) error {
 			return dayBucketErr
 		}
 
+		if isLeave {
+			dayBucket.Put([]byte("LEAVE"), []byte(leaveReason))
+			return nil
+		}
+
 		if !attendanceTime.TimeIn.DontChange {
 			timeInByte, timeInMarshalErr := json.Marshal(attendanceTime.TimeIn)
 			if timeInMarshalErr != nil {
 				return timeInMarshalErr
 			}
-			timeInPutErr := dayBucket.Put([]byte("TimeIn"), timeInByte)
+			timeInPutErr := dayBucket.Put([]byte("TIMEIN"), timeInByte)
 			if timeInPutErr != nil {
 				return timeInPutErr
 			}
@@ -359,7 +360,7 @@ func addAttendance(idNumber string, attendanceTime attendance) error {
 			if timeOutMarshalErr != nil {
 				return timeOutMarshalErr
 			}
-			timeOutPutErr := dayBucket.Put([]byte("TimeOut"), timeOutByte)
+			timeOutPutErr := dayBucket.Put([]byte("TIMEOUT"), timeOutByte)
 			if timeOutPutErr != nil {
 				return timeOutPutErr
 			}
@@ -367,4 +368,61 @@ func addAttendance(idNumber string, attendanceTime attendance) error {
 
 		return nil
 	})
+}
+
+func getAttendance(idNumber string, year int, month int, day int) (attendance, error) {
+	employeeAttendance := attendance{}
+
+	employeeStruct, verifyErr := getEmployee(idNumber)
+	if verifyErr != nil {
+		return employeeAttendance, verifyErr
+	}
+
+	db, dbErr := openDB()
+	if dbErr != nil {
+		return employeeAttendance, dbErr
+	}
+	defer db.Close()
+
+	yearString := strconv.Itoa(year)
+	monthString := strconv.Itoa(month)
+	dayString := strconv.Itoa(day)
+
+	dbViewErr := db.View(func(tx *bbolt.Tx) error {
+		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Attendance"))
+		yearBucket := attendanceBucket.Bucket([]byte(yearString))
+		monthBucket := yearBucket.Bucket([]byte(monthString))
+		dayBucket := monthBucket.Bucket([]byte(dayString))
+
+		leaveReason := dayBucket.Get([]byte("LEAVE"))
+		if leaveReason != nil {
+			employeeAttendance.State = "LEAVE"
+			employeeAttendance.Reason = string(leaveReason)
+			return nil
+		}
+
+		if dayBucket == nil {
+			employeeAttendance.State = "ABSENT"
+			return nil
+		}
+
+		timeInUnmarshalErr := json.Unmarshal(dayBucket.Get([]byte("TIMEIN")), &employeeAttendance.TimeIn)
+		if timeInUnmarshalErr != nil {
+			return timeInUnmarshalErr
+		}
+
+		timeOutUnmarshalErr := json.Unmarshal(dayBucket.Get([]byte("TIMEOUT")), &employeeAttendance.TimeOut)
+		if timeOutUnmarshalErr != nil {
+			return timeOutUnmarshalErr
+		}
+
+		employeeAttendance.State = "ATTENDED"
+
+		return nil
+	})
+	if dbViewErr != nil {
+		return employeeAttendance, dbViewErr
+	}
+
+	return employeeAttendance, nil
 }
