@@ -98,4 +98,26 @@ type (
 		IdNumber int
 		Schedule employeeSchedule
 	}
+
+	apiAddAttendanceBodyRes struct {
+		IdNumber       int
+		IsLeave        bool
+		LeaveReason    string
+		AttendanceTime attendance
+	}
+
+	apiGetAttendanceBody struct {
+		IdNumber int
+		Year     int
+		Month    int
+		Day      int
+	}
+
+	apiGetAttendanceRes struct {
+		IdNumber int
+		State    string
+		Reason   string
+		TimeIn   attendanceTime
+		TimeOut  attendanceTime
+	}
 )

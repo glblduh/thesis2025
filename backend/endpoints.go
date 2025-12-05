@@ -134,3 +134,39 @@ func apiGetEmployee(w http.ResponseWriter, r *http.Request) {
 
 	encodeRes(w, employeeStruct)
 }
+
+func apiAddAttendance(w http.ResponseWriter, r *http.Request) {
+	body := apiAddAttendanceBodyRes{}
+	if decodeBody(w, r.Body, &body) != nil {
+		return
+	}
+
+	addAttendanceErr := addAttendance(strconv.Itoa(body.IdNumber), body.IsLeave, body.LeaveReason, body.AttendanceTime)
+	if addAttendanceErr != nil {
+		errorRes(w, addAttendanceErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	encodeRes(w, body)
+}
+
+func apiGetAttendance(w http.ResponseWriter, r *http.Request) {
+	body := apiGetAttendanceBody{}
+	if decodeBody(w, r.Body, &body) != nil {
+		return
+	}
+
+	employeeAttendance, getAttendanceErr := getAttendance(strconv.Itoa(body.IdNumber), body.Year, body.Month, body.Day)
+	if getAttendanceErr != nil {
+		errorRes(w, getAttendanceErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	encodeRes(w, apiGetAttendanceRes{
+		IdNumber: body.IdNumber,
+		State:    employeeAttendance.State,
+		Reason:   employeeAttendance.Reason,
+		TimeIn:   employeeAttendance.TimeIn,
+		TimeOut:  employeeAttendance.TimeOut,
+	})
+}
