@@ -162,7 +162,7 @@ func apiGetAttendance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	employeeAttendance, getAttendanceErr := getAttendance(strconv.Itoa(body.IdNumber), body.Year, body.Month, body.Day)
+	employeeAttendance, getAttendanceErr := getAttendance(strconv.Itoa(body.IdNumber), body.SchoolYear, body.Date)
 	if getAttendanceErr != nil {
 		errorRes(w, getAttendanceErr.Error(), http.StatusInternalServerError)
 		return

@@ -107,10 +107,9 @@ type (
 	}
 
 	apiGetAttendanceBody struct {
-		IdNumber int
-		Year     int
-		Month    int
-		Day      int
+		IdNumber   int
+		SchoolYear schoolYearRange
+		Date       dayDate
 	}
 
 	apiGetAttendanceRes struct {

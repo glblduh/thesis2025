@@ -357,7 +357,7 @@ func addAttendance(idNumber string, isLeave bool, leaveReason string, attendance
 	})
 }
 
-func getAttendance(idNumber string, year int, month int, day int) (attendance, error) {
+func getAttendance(idNumber string, schoolYear schoolYearRange, date dayDate) (attendance, error) {
 	employeeAttendance := attendance{}
 
 	employeeStruct, verifyErr := getEmployee(idNumber)
@@ -371,15 +371,21 @@ func getAttendance(idNumber string, year int, month int, day int) (attendance, e
 	}
 	defer db.Close()
 
-	yearString := strconv.Itoa(year)
-	monthString := strconv.Itoa(month)
-	dayString := strconv.Itoa(day)
+	yearString := strconv.Itoa(date.Year)
+	monthString := strconv.Itoa(date.Month)
+	dayString := strconv.Itoa(date.Day)
 
 	dbViewErr := db.View(func(tx *bbolt.Tx) error {
 		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Attendance"))
 		yearBucket := attendanceBucket.Bucket([]byte(yearString))
 		monthBucket := yearBucket.Bucket([]byte(monthString))
 		dayBucket := monthBucket.Bucket([]byte(dayString))
+
+		scheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule"))
+		isWorkingDay, checkWorkingDayErr := checkIfWorkingDay(scheduleBucket, schoolYear, date)
+		if checkWorkingDayErr != nil {
+			return checkWorkingDayErr
+		}
 
 		leaveReason := dayBucket.Get([]byte("LEAVE"))
 		if leaveReason != nil {
@@ -388,7 +394,7 @@ func getAttendance(idNumber string, year int, month int, day int) (attendance, e
 			return nil
 		}
 
-		if dayBucket == nil {
+		if isWorkingDay && dayBucket == nil {
 			employeeAttendance.State = "ABSENT"
 			return nil
 		}

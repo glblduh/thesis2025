@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.etcd.io/bbolt"
 )
@@ -134,4 +135,18 @@ func createSchoolYearStruct(schoolYear string) (schoolYearRange, error) {
 	schoolYearStruct.StartYear = startYear
 	schoolYearStruct.EndYear = endYear
 	return schoolYearStruct, nil
+}
+
+func checkIfWorkingDay(scheduleBucket *bbolt.Bucket, schoolYear schoolYearRange, date dayDate) (bool, error) {
+	schoolYearString := createSchoolYearString(schoolYear.StartYear, schoolYear.EndYear)
+	schoolYearBucket := scheduleBucket.Bucket([]byte(schoolYearString))
+	if schoolYearBucket == nil {
+		return false, errors.New("school year not found")
+	}
+	dayName := time.Date(date.Year, time.Month(date.Month), date.Day, 0, 0, 0, 0, time.UTC).Weekday().String()
+	dayBucket := scheduleBucket.Bucket([]byte(dayName))
+	if dayBucket == nil {
+		return false, nil
+	}
+	return true, nil
 }
