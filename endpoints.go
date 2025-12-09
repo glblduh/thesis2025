@@ -99,7 +99,13 @@ func apiGetSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	employeeSchedule, getScheduleErr := getEmployeeSchedule(idNumber, schoolYearRequest)
+	schoolYearStruct, createSchoolYearStructErr := createSchoolYearStruct(schoolYearRequest)
+	if createSchoolYearStructErr != nil {
+		errorRes(w, createSchoolYearStructErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	employeeSchedule, getScheduleErr := getEmployeeSchedule(idNumber, schoolYearStruct)
 	if getScheduleErr != nil {
 		errorRes(w, getScheduleErr.Error(), http.StatusInternalServerError)
 		return

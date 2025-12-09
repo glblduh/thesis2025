@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"strconv"
-	"strings"
 	"time"
 
 	"go.etcd.io/bbolt"
@@ -110,7 +109,7 @@ func updateEmployeeSchedule(idNumber string, schedule employeeSchedule) error {
 	}
 	defer db.Close()
 
-	schoolYear := strconv.Itoa(schedule.SchoolYear.StartYear) + "-" + strconv.Itoa(schedule.SchoolYear.EndYear)
+	schoolYear := createSchoolYearString(schedule.SchoolYear.StartYear, schedule.SchoolYear.EndYear)
 
 	return db.Update(func(tx *bbolt.Tx) error {
 		scheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule"))
@@ -220,14 +219,9 @@ func getEmployeeAllYearsSchedule(idNumber string) ([]employeeSchedule, error) {
 
 		for key, _ := cursor.First(); key != nil; key, _ = cursor.Next() {
 			currentYearSchedule := employeeSchedule{}
-			schoolYear := strings.Split(string(key), "-")
-			schoolYearStart, schoolYearConvertErr := strconv.Atoi(schoolYear[0])
-			if schoolYearConvertErr != nil {
-				return schoolYearConvertErr
-			}
-			schoolYearEnd, schoolYearConvertErr := strconv.Atoi(schoolYear[1])
-			if schoolYearConvertErr != nil {
-				return schoolYearConvertErr
+			schoolYearStart, schoolYearEnd, schoolYearSplitErr := splitSchoolYear(string(key))
+			if schoolYearSplitErr != nil {
+				return schoolYearSplitErr
 			}
 			schoolYearStruct := schoolYearRange{
 				StartYear: schoolYearStart,
@@ -254,7 +248,7 @@ func getEmployeeAllYearsSchedule(idNumber string) ([]employeeSchedule, error) {
 	return allYearsSchedule, nil
 }
 
-func getEmployeeSchedule(idNumber string, schoolYear string) (employeeSchedule, error) {
+func getEmployeeSchedule(idNumber string, schoolYear schoolYearRange) (employeeSchedule, error) {
 	employeeSchedule := employeeSchedule{}
 
 	employeeStruct, verifyErr := getEmployee(idNumber)
@@ -269,23 +263,16 @@ func getEmployeeSchedule(idNumber string, schoolYear string) (employeeSchedule, 
 	defer db.Close()
 
 	scheduleIterateErr := db.View(func(tx *bbolt.Tx) error {
-		schoolYearBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte(schoolYear))
+		schoolYearString := createSchoolYearString(schoolYear.StartYear, schoolYear.EndYear)
+
+		schoolYearBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte(schoolYearString))
 		if schoolYearBucket == nil {
 			return errors.New("school year not found")
 		}
 
-		schoolYear := strings.Split(schoolYear, "-")
-		schoolYearStart, schoolYearConvertErr := strconv.Atoi(schoolYear[0])
-		if schoolYearConvertErr != nil {
-			return schoolYearConvertErr
-		}
-		schoolYearEnd, schoolYearConvertErr := strconv.Atoi(schoolYear[1])
-		if schoolYearConvertErr != nil {
-			return schoolYearConvertErr
-		}
 		employeeSchedule.SchoolYear = schoolYearRange{
-			StartYear: schoolYearStart,
-			EndYear:   schoolYearEnd,
+			StartYear: schoolYear.StartYear,
+			EndYear:   schoolYear.EndYear,
 		}
 
 		schoolYearCursor := schoolYearBucket.Cursor()

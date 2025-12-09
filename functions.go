@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"go.etcd.io/bbolt"
@@ -105,4 +106,32 @@ func checkIfFaculty(employeeType string) (bool, error) {
 		return false, errors.New("not a valid employee type")
 	}
 	return isFaculty, nil
+}
+
+func createSchoolYearString(startYear int, endYear int) string {
+	return strconv.Itoa(startYear) + "-" + strconv.Itoa(endYear)
+}
+
+func splitSchoolYear(schoolYearString string) (int, int, error) {
+	schoolYear := strings.Split(schoolYearString, "-")
+	schoolYearStart, schoolYearConvertErr := strconv.Atoi(schoolYear[0])
+	if schoolYearConvertErr != nil {
+		return 0, 0, schoolYearConvertErr
+	}
+	schoolYearEnd, schoolYearConvertErr := strconv.Atoi(schoolYear[1])
+	if schoolYearConvertErr != nil {
+		return 0, 0, schoolYearConvertErr
+	}
+	return schoolYearStart, schoolYearEnd, nil
+}
+
+func createSchoolYearStruct(schoolYear string) (schoolYearRange, error) {
+	schoolYearStruct := schoolYearRange{}
+	startYear, endYear, splitSchoolYearErr := splitSchoolYear(schoolYear)
+	if splitSchoolYearErr != nil {
+		return schoolYearStruct, splitSchoolYearErr
+	}
+	schoolYearStruct.StartYear = startYear
+	schoolYearStruct.EndYear = endYear
+	return schoolYearStruct, nil
 }
