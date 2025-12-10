@@ -150,3 +150,43 @@ func checkIfWorkingDay(scheduleBucket *bbolt.Bucket, schoolYear schoolYearRange,
 	}
 	return true, nil
 }
+
+func getAttendanceState(dayBucket *bbolt.Bucket, scheduleBucket *bbolt.Bucket, schoolYear schoolYearRange, date dayDate) (attendance, error) {
+	attendanceStruct := attendance{}
+
+	isWorkingDay, checkWorkingDayErr := checkIfWorkingDay(scheduleBucket, schoolYear, date)
+	if checkWorkingDayErr != nil {
+		return attendanceStruct, checkWorkingDayErr
+	}
+
+	leaveReason := dayBucket.Get([]byte("LEAVE"))
+	if leaveReason != nil {
+		attendanceStruct.State = "LEAVE"
+		attendanceStruct.Reason = string(leaveReason)
+		return attendanceStruct, nil
+	}
+
+	if !isWorkingDay {
+		attendanceStruct.State = "DAYOFF"
+		return attendanceStruct, nil
+	}
+
+	if isWorkingDay && dayBucket == nil {
+		attendanceStruct.State = "ABSENT"
+		return attendanceStruct, nil
+	}
+
+	timeInUnmarshalErr := json.Unmarshal(dayBucket.Get([]byte("TIMEIN")), &attendanceStruct.TimeIn)
+	if timeInUnmarshalErr != nil {
+		return attendanceStruct, timeInUnmarshalErr
+	}
+
+	timeOutUnmarshalErr := json.Unmarshal(dayBucket.Get([]byte("TIMEOUT")), &attendanceStruct.TimeOut)
+	if timeOutUnmarshalErr != nil {
+		return attendanceStruct, timeOutUnmarshalErr
+	}
+
+	attendanceStruct.State = "ATTENDED"
+
+	return attendanceStruct, nil
+}
