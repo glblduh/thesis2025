@@ -424,3 +424,20 @@ func getAttendance(idNumber string, schoolYear schoolYearRange, date dayDate) (a
 
 	return employeeAttendance, nil
 }
+
+func getMonthAttendance(idNumber string, schoolYear schoolYearRange, date dayDate) ([]attendance, error) {
+	employeeMonthAttendances := []attendance{}
+	monthDays := time.Date(date.Year, time.Month(date.Month)+1, 0, 0, 0, 0, 0, time.UTC).Day()
+
+	for i := 1; i <= monthDays; i++ {
+		currentDayDate := dayDate{Year: date.Year, Month: date.Month, Day: i}
+		currentDayAttendance, getAttendanceErr := getAttendance(idNumber, schoolYear, currentDayDate)
+		if getAttendanceErr != nil {
+			return employeeMonthAttendances, getAttendanceErr
+		}
+
+		employeeMonthAttendances = append(employeeMonthAttendances, currentDayAttendance)
+	}
+
+	return employeeMonthAttendances, nil
+}
