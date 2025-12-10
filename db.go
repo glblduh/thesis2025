@@ -394,6 +394,11 @@ func getAttendance(idNumber string, schoolYear schoolYearRange, date dayDate) (a
 			return nil
 		}
 
+		if !isWorkingDay {
+			employeeAttendance.State = "DAYOFF"
+			return nil
+		}
+
 		if isWorkingDay && dayBucket == nil {
 			employeeAttendance.State = "ABSENT"
 			return nil
