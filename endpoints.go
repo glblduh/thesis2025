@@ -176,3 +176,21 @@ func apiGetAttendance(w http.ResponseWriter, r *http.Request) {
 		TimeOut:  employeeAttendance.TimeOut,
 	})
 }
+
+func apiGetMonthAttendances(w http.ResponseWriter, r *http.Request) {
+	body := apiGetAttendanceBody{}
+	if decodeBody(w, r.Body, &body) != nil {
+		return
+	}
+
+	employeeMonthAttendances, getMonthAttendancesErr := getMonthAttendances(strconv.Itoa(body.IdNumber), body.SchoolYear, body.Date)
+	if getMonthAttendancesErr != nil {
+		errorRes(w, getMonthAttendancesErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	encodeRes(w, apiGetMonthAttendancesRes{
+		IdNumber:    body.IdNumber,
+		Attendances: employeeMonthAttendances,
+	})
+}

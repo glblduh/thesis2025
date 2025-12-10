@@ -23,6 +23,7 @@ func main() {
 	httpRouter.HandleFunc("/api/getschedule/{idNumber}/{schoolYear}", apiGetSchedule).Methods("GET")
 	httpRouter.HandleFunc("/api/getemployee/{idNumber}", apiGetEmployee).Methods("GET")
 	httpRouter.HandleFunc("/api/getattendance", apiGetAttendance).Methods("GET")
+	httpRouter.HandleFunc("/api/getmonthattendances", apiGetMonthAttendances).Methods("GET")
 
 	httpCors := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},

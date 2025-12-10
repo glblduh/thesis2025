@@ -397,7 +397,7 @@ func getAttendance(idNumber string, schoolYear schoolYearRange, date dayDate) (a
 	return employeeAttendance, nil
 }
 
-func getMonthAttendance(idNumber string, schoolYear schoolYearRange, date dayDate) ([]attendance, error) {
+func getMonthAttendances(idNumber string, schoolYear schoolYearRange, date dayDate) ([]attendance, error) {
 	employeeMonthAttendances := []attendance{}
 
 	employeeStruct, verifyErr := getEmployee(idNumber)

@@ -119,4 +119,9 @@ type (
 		TimeIn   attendanceTime
 		TimeOut  attendanceTime
 	}
+
+	apiGetMonthAttendancesRes struct {
+		IdNumber    int
+		Attendances []attendance
+	}
 )
