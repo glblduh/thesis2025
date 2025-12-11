@@ -194,3 +194,13 @@ func apiGetMonthAttendances(w http.ResponseWriter, r *http.Request) {
 		Attendances: employeeMonthAttendances,
 	})
 }
+
+func apiGetAllEmployees(w http.ResponseWriter, r *http.Request) {
+	allEmployeesStruct, getAllEmployeesErr := getAllEmployees()
+	if getAllEmployeesErr != nil {
+		errorRes(w, getAllEmployeesErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	encodeRes(w, allEmployeesStruct)
+}

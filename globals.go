@@ -65,6 +65,11 @@ type (
 		Month int
 		Day   int
 	}
+
+	allEmployees struct {
+		Faculty []employee
+		Staff   []employee
+	}
 )
 
 type (
