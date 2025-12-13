@@ -7,6 +7,5 @@ build_web:
 build: build_web
 	$(CC) build -o bin/$(BIN_NAME)
 
-run: build_web
-	$(CC) build -o bin/$(BIN_NAME)
+run: build
 	./bin/$(BIN_NAME)

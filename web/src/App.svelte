@@ -1,17 +1,12 @@
 <script lang="ts">
 	import "bootstrap/dist/css/bootstrap.min.css";
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
-	import {
-		Table,
-		TableBody,
-		TableBodyCell,
-		TableHead,
-		TableHeadCell,
-		Radio,
-		TableSearch,
-		TableBodyRow,
-	} from "flowbite-svelte";
+	import { Button, ButtonGroup, Modal, Table } from "@sveltestrap/sveltestrap";
 	import { onMount } from "svelte";
+	import AddEmployee from "./lib/AddEmployee.svelte";
+	import RemoveEmployee from "./lib/RemoveEmployee.svelte";
+	import Attendances from "./lib/Attendances.svelte";
+	import Schedules from "./lib/Schedules.svelte";
 
 	interface Employee {
 		idNumber: number;
@@ -67,67 +62,94 @@
 	});
 
 	let employees: Employee[] = [];
+
+	let addEmployeeModalState = false;
+	function addEmployeeModalToggle() {
+		addEmployeeModalState = !addEmployeeModalState;
+	}
+
+	let removeEmployeeModalState = false;
+	function removeEmployeeModalToggle() {
+		removeEmployeeModalState = !removeEmployeeModalState;
+	}
+
+	let employeeAttendancesModalState = false;
+	function employeeAttendancesModalToggle() {
+		employeeAttendancesModalState = !employeeAttendancesModalState;
+	}
+
+	let employeeSchedulesModalState = false;
+	function employeeSchedulesModalToggle() {
+		employeeSchedulesModalState = !employeeSchedulesModalState;
+	}
 </script>
 
 <main>
+	<AddEmployee isModalOpen={addEmployeeModalState} modalToggle={addEmployeeModalToggle} />
+
 	<div class="header">
 		<h2>Attendance Viewer</h2>
 	</div>
 
-	<div class="employeeSelection">
-		<div class="employeeContainer">
-			<Table class="table table-striped caption-top">
-				<caption> Employee List </caption>
-				<TableHead>
-					<TableHeadCell>SELECT</TableHeadCell>
-					<TableHeadCell>ID NUMBER</TableHeadCell>
-					<TableHeadCell>LAST NAME</TableHeadCell>
-					<TableHeadCell>FIRST NAME</TableHeadCell>
-					<TableHeadCell>MIDDLE NAME</TableHeadCell>
-					<TableHeadCell>TYPE</TableHeadCell>
-				</TableHead>
-				<TableBody>
-					{#each employees as employee}
-						<TableBodyRow>
-							<TableBodyCell><Radio /></TableBodyCell>
-							<TableBodyCell>{employee.idNumber}</TableBodyCell>
-							<TableBodyCell>{employee.lastName}</TableBodyCell>
-							<TableBodyCell>{employee.firstName}</TableBodyCell>
-							<TableBodyCell>{employee.middleName}</TableBodyCell>
-							<TableBodyCell>{employee.employeeType}</TableBodyCell>
-						</TableBodyRow>
-					{/each}
-				</TableBody>
-			</Table>
-		</div>
-		<div class="selectionAction">
-			<span class="selectionActionTitle">Select an action</span>
-			<div class="selectionActionButtons">
-				<button>Add Employee</button>
-				<button>Show Schedule</button>
-				<button>Show Attendance</button>
-				<button>Remove Employee</button>
-			</div>
-		</div>
+	<div>
+		<ButtonGroup size="sm">
+			<Button color="success" on:click={addEmployeeModalToggle}>Add Employee</Button>
+			<Button color="info">Refresh</Button>
+		</ButtonGroup>
+	</div>
+
+	<div class="employeeContainer">
+		<Table responsive striped>
+			<thead>
+				<tr>
+					<th scope="col">ACTION</th>
+					<th scope="col">ID NUMBER</th>
+					<th scope="col">TYPE</th>
+					<th scope="col">FIRST NAME</th>
+					<th scope="col">MIDDLE NAME</th>
+					<th scope="col">LAST NAME</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each employees as employee}
+					<tr>
+						<td>
+							<ButtonGroup vertical size="sm">
+								<Button color="primary">Attendances</Button>
+								<Button color="primary">Schedules</Button>
+								<Button color="danger">Remove</Button>
+							</ButtonGroup>
+						</td>
+						<td>{employee.idNumber}</td>
+						<td>{employee.employeeType}</td>
+						<td>{employee.firstName}</td>
+						<td>{employee.middleName}</td>
+						<td>{employee.lastName}</td>
+					</tr>
+				{/each}
+				<tr>
+					<td>
+						<ButtonGroup vertical size="sm">
+							<Button color="primary">Attendances</Button>
+							<Button color="primary">Schedules</Button>
+							<Button color="danger">Remove</Button>
+						</ButtonGroup>
+					</td>
+					<td>1</td>
+					<td>gg</td>
+					<td>gg</td>
+					<td>gg</td>
+					<td>gg</td>
+				</tr>
+			</tbody>
+		</Table>
 	</div>
 </main>
 
 <style>
-	.employeeSelection {
-		display: grid;
-		grid-template-columns: 4fr 1fr;
-	}
 	.employeeContainer {
 		display: grid;
 		grid-template-columns: 1;
-	}
-	.selectionAction {
-		display: grid;
-		grid-template-columns: 1;
-	}
-	.selectionActionButtons {
-		display: grid;
-		grid-template-columns: 1;
-		grid-gap: 5%;
+		padding: 1% 1% 1% 1%;
 	}
 </style>
