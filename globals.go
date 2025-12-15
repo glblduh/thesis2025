@@ -19,7 +19,7 @@ type (
 	}
 
 	dayTimeRange struct {
-		DontChange      bool
+		Change          bool
 		StartTimeHour   int
 		StartTimeMinute int
 		EndTimeHour     int

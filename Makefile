@@ -7,5 +7,8 @@ build_web:
 build: build_web
 	$(CC) build -o bin/$(BIN_NAME)
 
+run_web:
+	cd web && npm run dev
+
 run: build
 	./bin/$(BIN_NAME)

@@ -1,12 +1,16 @@
 <script lang="ts">
 	import "bootstrap/dist/css/bootstrap.min.css";
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
-	import { Button, ButtonGroup, Modal, Table } from "@sveltestrap/sveltestrap";
+	import 'bootstrap-icons/font/bootstrap-icons.css';
+	import { Button, ButtonGroup, Table, Navbar, NavbarBrand, Icon } from "@sveltestrap/sveltestrap";
 	import { onMount } from "svelte";
 	import AddEmployee from "./lib/AddEmployee.svelte";
 	import RemoveEmployee from "./lib/RemoveEmployee.svelte";
 	import Attendances from "./lib/Attendances.svelte";
 	import Schedules from "./lib/Schedules.svelte";
+
+	let employees: Employee[] = [];
+	let selectedEmployee: number = 0;
 
 	interface Employee {
 		idNumber: number;
@@ -57,11 +61,13 @@
 		}
 	}
 
+	function selectEmployee(selected: number) {
+		selectedEmployee = selected;
+	}
+
 	onMount(async () => {
 		parseEmployees();
 	});
-
-	let employees: Employee[] = [];
 
 	let addEmployeeModalState = false;
 	function addEmployeeModalToggle() {
@@ -78,27 +84,30 @@
 		employeeAttendancesModalState = !employeeAttendancesModalState;
 	}
 
+	let employeeSchedulesModal: Schedules;
 	let employeeSchedulesModalState = false;
 	function employeeSchedulesModalToggle() {
+		if (!employeeSchedulesModalState) {
+			employeeSchedulesModal.getSchedules(selectedEmployee);
+		}
 		employeeSchedulesModalState = !employeeSchedulesModalState;
 	}
 </script>
 
 <main>
-	<AddEmployee isModalOpen={addEmployeeModalState} modalToggle={addEmployeeModalToggle} />
+	<AddEmployee isModalOpen={addEmployeeModalState} modalToggle={addEmployeeModalToggle} refreshList={parseEmployees} />
+	<RemoveEmployee isModalOpen={removeEmployeeModalState} modalToggle={removeEmployeeModalToggle} refreshList={parseEmployees} idNumber={selectedEmployee} />
+	<Schedules bind:this={employeeSchedulesModal} isModalOpen={employeeSchedulesModalState} modalToggle={employeeSchedulesModalToggle} idNumber={selectEmployee} />
 
-	<div class="header">
-		<h2>Attendance Viewer</h2>
-	</div>
-
-	<div>
+	<Navbar fixed="top" sticky="top">
+		<NavbarBrand href="/" class="fw-bold">Attendance Viewer</NavbarBrand>
 		<ButtonGroup size="sm">
-			<Button color="success" on:click={addEmployeeModalToggle}>Add Employee</Button>
-			<Button color="info">Refresh</Button>
+			<Button color="success" on:click={addEmployeeModalToggle}><Icon name="person-plus-fill" class="fw-bold" /> Add Employee</Button>
+			<Button color="info" on:click={parseEmployees}><Icon name="arrow-clockwise" class="fw-bold" /> Refresh</Button>
 		</ButtonGroup>
-	</div>
+	</Navbar>
 
-	<div class="employeeContainer">
+	<div style="padding: .5%;">
 		<Table responsive striped>
 			<thead>
 				<tr>
@@ -116,8 +125,8 @@
 						<td>
 							<ButtonGroup vertical size="sm">
 								<Button color="primary">Attendances</Button>
-								<Button color="primary">Schedules</Button>
-								<Button color="danger">Remove</Button>
+								<Button color="primary" on:click={() => {selectEmployee(employee.idNumber); employeeSchedulesModalToggle();}}>Schedules</Button>
+								<Button color="danger" on:click={() => {selectEmployee(employee.idNumber); removeEmployeeModalToggle();}}>Remove</Button>
 							</ButtonGroup>
 						</td>
 						<td>{employee.idNumber}</td>
@@ -131,8 +140,8 @@
 					<td>
 						<ButtonGroup vertical size="sm">
 							<Button color="primary">Attendances</Button>
-							<Button color="primary">Schedules</Button>
-							<Button color="danger">Remove</Button>
+							<Button color="primary" on:click={() => {employeeSchedulesModalToggle();}}>Schedules</Button>
+							<Button color="danger" on:click={() => {removeEmployeeModalToggle();}}>Remove</Button>
 						</ButtonGroup>
 					</td>
 					<td>1</td>
@@ -147,9 +156,4 @@
 </main>
 
 <style>
-	.employeeContainer {
-		display: grid;
-		grid-template-columns: 1;
-		padding: 1% 1% 1% 1%;
-	}
 </style>

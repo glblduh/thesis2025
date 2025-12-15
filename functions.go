@@ -40,7 +40,7 @@ func decodeBody(w http.ResponseWriter, body io.Reader, v any) error {
 }
 
 func writeDaySchedule(schoolYearBucket *bbolt.Bucket, dayName string, daySchedule dayTimeRange) error {
-	if daySchedule.DontChange {
+	if !daySchedule.Change {
 		return nil
 	}
 
@@ -64,7 +64,7 @@ func employeeInfoDBToStruct(employeeBucket *bbolt.Bucket, idNumber int, isFacult
 		EmployeeType: string(employeeBucket.Get([]byte("EmployeeType"))),
 		FirstName:    string(employeeBucket.Get([]byte("FirstName"))),
 		MiddleName:   string(employeeBucket.Get([]byte("MiddleName"))),
-		LastName:     string(employeeBucket.Get([]byte("Name"))),
+		LastName:     string(employeeBucket.Get([]byte("LastName"))),
 	}
 }
 
