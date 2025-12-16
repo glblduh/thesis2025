@@ -4,6 +4,7 @@
 	import 'bootstrap-icons/font/bootstrap-icons.css';
 	import { Button, Table, Modal, ModalBody, Form, FormGroup, Input, ModalFooter } from "@sveltestrap/sveltestrap";
     import UpdateSchedule from "./UpdateSchedule.svelte";
+    import RemoveSchedule from "./RemoveSchedule.svelte";
 
 	let { isModalOpen, modalToggle } = $props();
 
@@ -51,6 +52,7 @@
 
 	export async function getSchedules(idNumber: number) {
 		addScheduleModal.setIdNumber(idNumber);
+		removeScheduleModal.setIdNumber(idNumber);
 		let getAllSchedules = await fetch("/api/getallschedule/" + idNumber)
 		selectedSchoolYearSchedules = await getAllSchedules.json();
 	}
@@ -80,9 +82,17 @@
 		clearVars();
 		addScheduleModalState = !addScheduleModalState;
 	}
+
+	let removeScheduleModal: RemoveSchedule;
+	let removeScheduleModalState = $state(false);
+	function removeScheduleModalToggle() {
+		clearVars();
+		removeScheduleModalState = !removeScheduleModalState;
+	}
 </script>
 
 <UpdateSchedule bind:this={addScheduleModal} isModalOpen={addScheduleModalState} modalToggle={addScheduleModalToggle} />
+<RemoveSchedule bind:this={removeScheduleModal} isModalOpen={removeScheduleModalState} modalToggle={removeScheduleModalToggle} refreshList={getSchedules} />
 
 <Modal isOpen={isModalOpen} toggle={clearVars} header="View Schedules">
 	<ModalBody>
@@ -121,7 +131,7 @@
 		</Table>
 	</ModalBody>
 	<ModalFooter>
-		<Button color="danger" disabled={selectedSchoolYear == undefined}>Remove Schedule</Button>
+		<Button color="danger" disabled={selectedSchoolYear == undefined} on:click={() => {removeScheduleModal.setSchoolYear(selectedSchoolYear as string); removeScheduleModalToggle();}}>Remove Schedule</Button>
 		<Button color="info" disabled={selectedSchoolYear == undefined} on:click={() => {addScheduleModal.setSchedule(getSelectedYearSchedule(selectedSchoolYear as string)); addScheduleModalToggle();}}>Edit Schedule</Button>
 		<Button color="success" on:click={addScheduleModalToggle}>Add Schedule</Button>
 	</ModalFooter>

@@ -21,7 +21,7 @@
 
 <Modal isOpen={isModalOpen} toggle={modalToggle} header="Remove Employee">
 	<ModalBody>
-		Are you sure to remove employee number: <span class="fw-bold">{idNumber}</span> ?
+		Are you sure to remove employee number <span class="fw-bold">{idNumber}</span>? This action is irreversible.
 	</ModalBody>
 	<ModalFooter>
 		<Button color="secondary" on:click={modalToggle}>No</Button>
