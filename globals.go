@@ -129,4 +129,9 @@ type (
 		IdNumber    int
 		Attendances []attendance
 	}
+
+	apiRemoveScheduleBodyRes struct {
+		IdNumber   int
+		SchoolYear string
+	}
 )

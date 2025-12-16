@@ -204,3 +204,18 @@ func apiGetAllEmployees(w http.ResponseWriter, r *http.Request) {
 
 	encodeRes(w, allEmployeesStruct)
 }
+
+func apiRemoveSchedule(w http.ResponseWriter, r *http.Request) {
+	body := apiRemoveScheduleBodyRes{};
+	if decodeBody(w, r.Body, &body) != nil {
+		return
+	}
+
+	removeScheduleErr := removeSchedule(strconv.Itoa(body.IdNumber), body.SchoolYear)
+	if removeScheduleErr != nil {
+		errorRes(w, removeScheduleErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	encodeRes(w, body)
+}

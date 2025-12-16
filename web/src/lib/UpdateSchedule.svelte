@@ -2,7 +2,7 @@
 	import "bootstrap/dist/css/bootstrap.min.css";
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
 	import 'bootstrap-icons/font/bootstrap-icons.css';
-	import { Button, Modal, ModalBody, FormGroup, Input, Table, InputGroup } from "@sveltestrap/sveltestrap";
+	import { Button, Modal, ModalBody, FormGroup, Input, Table, InputGroup, Form, ModalFooter } from "@sveltestrap/sveltestrap";
 
 	let { isModalOpen, modalToggle } = $props();
 
@@ -30,7 +30,12 @@
 		Sunday: DayTimeRange
 	}
 
-	let schedules = $state({
+	interface addScheduleBody {
+		IdNumber: number,
+		Schedule: Schedule
+	}
+
+	const defaultSchedulesState: Schedule = {
 		SchoolYear: {StartYear: 0, EndYear: 0},
 		Monday: {Change: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
 		Tuesday: {Change: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
@@ -39,8 +44,15 @@
 		Friday: {Change: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
 		Saturday: {Change: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
 		Sunday: {Change: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
-	}) as Schedule;
+	};
+
+	let schedules = $state(defaultSchedulesState) as Schedule;
 	let editSchedule = $state(false);
+	let idNumber: number = 0;
+
+	export function setIdNumber(id: number) {
+		idNumber = id;
+	}
 
 	export function setSchedule(selectedSchedule: Schedule) {
 		editSchedule = true;
@@ -48,7 +60,9 @@
 	}
 
 	function clearVars() {
+		schedules = defaultSchedulesState;
 		editSchedule = false;
+		idNumber = 0;
 		modalToggle();
 	}
 
@@ -59,9 +73,18 @@
 		}
 		return header;
 	}
+
+	async function addSchedule() {
+		let requestBody: addScheduleBody = {
+			IdNumber: idNumber,
+			Schedule: schedules
+		};
+		let apiRes = await fetch("/api/updateschedule", {method: "POST", body: JSON.stringify(requestBody)});
+		clearVars();
+	}
 </script>
 
-<Modal isOpen={isModalOpen} toggle={clearVars} header={setHeader()}>
+<Modal isOpen={isModalOpen} toggle={clearVars} header={setHeader()} size="lg">
 	<ModalBody>
 		<InputGroup>
 			<FormGroup floating label="School Year Start">
@@ -71,7 +94,7 @@
 				<Input type="number" disabled={editSchedule} bind:value={schedules.SchoolYear.EndYear} />
 			</FormGroup>
 		</InputGroup>
-		<Table size="sm" striped>
+		<Table size="sm" striped responsive>
 			<thead>
 				<tr>
 					<th scope="col" class="text-center">CHANGE?</th>
@@ -86,7 +109,7 @@
 				{#each Object.entries(schedules) as [day, time]}
 					{#if day != "SchoolYear"}
 						<tr>
-							<td class="align-center"><Input type="checkbox" bind:checked={(time as DayTimeRange).Change} /></td>
+							<td><Input type="checkbox" bind:checked={(time as DayTimeRange).Change} /></td>
 							<td class="text-center fw-bold">{day.toUpperCase()}</td>
 							<td><Input type="number" disabled={!(time as DayTimeRange).Change} min=0 max=23 bind:value={(time as DayTimeRange).StartTimeHour} /></td>
 							<td><Input type="number" disabled={!(time as DayTimeRange).Change} min=0 max=59 bind:value={(time as DayTimeRange).StartTimeMinute} /></td>
@@ -98,4 +121,8 @@
 			</tbody>
 		</Table>
 	</ModalBody>
+	<ModalFooter>
+		<Button color="secondary" on:click={clearVars}>Back</Button>
+		<Button color="success" type="submit" on:click={addSchedule}>Submit</Button>
+	</ModalFooter>
 </Modal>

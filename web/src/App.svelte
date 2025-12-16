@@ -97,7 +97,7 @@
 <main>
 	<AddEmployee isModalOpen={addEmployeeModalState} modalToggle={addEmployeeModalToggle} refreshList={parseEmployees} />
 	<RemoveEmployee isModalOpen={removeEmployeeModalState} modalToggle={removeEmployeeModalToggle} refreshList={parseEmployees} idNumber={selectedEmployee} />
-	<Schedules bind:this={employeeSchedulesModal} isModalOpen={employeeSchedulesModalState} modalToggle={employeeSchedulesModalToggle} idNumber={selectEmployee} />
+	<Schedules bind:this={employeeSchedulesModal} isModalOpen={employeeSchedulesModalState} modalToggle={employeeSchedulesModalToggle} />
 
 	<Navbar fixed="top" sticky="top">
 		<NavbarBrand href="/" class="fw-bold">Attendance Viewer</NavbarBrand>
@@ -136,20 +136,6 @@
 						<td>{employee.lastName}</td>
 					</tr>
 				{/each}
-				<tr>
-					<td>
-						<ButtonGroup vertical size="sm">
-							<Button color="primary">Attendances</Button>
-							<Button color="primary" on:click={() => {employeeSchedulesModalToggle();}}>Schedules</Button>
-							<Button color="danger" on:click={() => {removeEmployeeModalToggle();}}>Remove</Button>
-						</ButtonGroup>
-					</td>
-					<td>1</td>
-					<td>gg</td>
-					<td>gg</td>
-					<td>gg</td>
-					<td>gg</td>
-				</tr>
 			</tbody>
 		</Table>
 	</div>

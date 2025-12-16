@@ -485,3 +485,20 @@ func getAllEmployees() (allEmployees, error) {
 
 	return allEmployeesStruct, nil
 }
+
+func removeSchedule(idNumber string, schoolYear string) (error) {
+	employeeStruct, verifyErr := getEmployee(idNumber)
+	if verifyErr != nil {
+		return verifyErr
+	}
+
+	db, dbErr := openDB()
+	if dbErr != nil {
+		return  dbErr
+	}
+	defer db.Close()
+
+	return db.Update(func(tx *bbolt.Tx) error {
+		return tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule")).DeleteBucket([]byte(schoolYear))
+	})
+}
