@@ -147,7 +147,7 @@ func apiAddAttendance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	addAttendanceErr := addAttendance(strconv.Itoa(body.IdNumber), body.IsLeave, body.LeaveReason, body.AttendanceTime)
+	addAttendanceErr := updateAttendance(strconv.Itoa(body.IdNumber), body.AttendanceTime)
 	if addAttendanceErr != nil {
 		errorRes(w, addAttendanceErr.Error(), http.StatusInternalServerError)
 		return
@@ -206,7 +206,7 @@ func apiGetAllEmployees(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiRemoveSchedule(w http.ResponseWriter, r *http.Request) {
-	body := apiRemoveScheduleBodyRes{};
+	body := apiRemoveScheduleBodyRes{}
 	if decodeBody(w, r.Body, &body) != nil {
 		return
 	}

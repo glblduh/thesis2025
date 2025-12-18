@@ -5,39 +5,12 @@
 	import { Button, Table, Modal, ModalBody, Form, FormGroup, Input, ModalFooter } from "@sveltestrap/sveltestrap";
     import UpdateSchedule from "./UpdateSchedule.svelte";
     import RemoveSchedule from "./RemoveSchedule.svelte";
+    import type { ApiRes, Schedule, SchoolYearRange, DayTimeRange } from "./utils";
+    import { getSchedules } from "./utils";
 
 	let { isModalOpen, modalToggle } = $props();
 
-	interface schoolYearRange {
-		StartYear: number,
-		EndYear: number
-	}
-
-	interface DayTimeRange {
-		Change: boolean,
-		StartTimeHour: number,
-		StartTimeMinute: number,
-		EndTimeHour: number,
-		EndTimeMinute: number
-	}
-
-	interface Schedule {
-		SchoolYear: schoolYearRange,
-		Monday: DayTimeRange,
-		Tuesday: DayTimeRange,
-		Wednesday: DayTimeRange,
-		Thursday: DayTimeRange,
-		Friday: DayTimeRange,
-		Saturday: DayTimeRange,
-		Sunday: DayTimeRange
-	}
-
-	interface apiRes {
-		IdNumber: number,
-		Schedules: Schedule[]
-	}
-
-	let selectedSchoolYearSchedules: apiRes | undefined = $state();
+	let selectedSchoolYearSchedules: ApiRes | undefined = $state();
 	let selectedSchoolYear: string | undefined = $state();
 	let selectedEmployeeIdNumber: number = $state(0);
 	let selectedSchedule = $state({}) as Schedule;
@@ -50,17 +23,19 @@
 		modalToggle();
 	}
 
-	export async function getSchedules(idNumber: number) {
+	export async function init(idNumber: number) {
 		addScheduleModal.setIdNumber(idNumber);
 		removeScheduleModal.setIdNumber(idNumber);
-		let getAllSchedules = await fetch("/api/getallschedule/" + idNumber)
-		selectedSchoolYearSchedules = await getAllSchedules.json();
+
+		getSchedules(idNumber).then((resJson) => {
+			selectedSchoolYearSchedules = resJson;
+		});
 	}
 
 	function getSelectedYearSchedule(schoolYear: string): Schedule {
 		let scheduleOut = {} as Schedule;
 		let schoolYearSplitted = schoolYear.split("-");
-		let yearRange: schoolYearRange = {
+		let yearRange: SchoolYearRange = {
 			StartYear: Number(schoolYearSplitted[0]),
 			EndYear: Number(schoolYearSplitted[1])
 		}
@@ -98,17 +73,16 @@
 	<ModalBody>
 		<FormGroup floating label="School Year">
 			<Input type="select" bind:value={selectedSchoolYear} on:change={showSchedule}>
-				{#if selectedSchoolYearSchedules != undefined}
-					{#each selectedSchoolYearSchedules.Schedules as schoolYearSchedule }
-						<option>{schoolYearSchedule.SchoolYear.StartYear + "-" + schoolYearSchedule.SchoolYear.EndYear}</option>
-					{/each}
-				{/if}
+				{#each selectedSchoolYearSchedules?.Schedules as schoolYearSchedule }
+					<option>{schoolYearSchedule.SchoolYear.StartYear + "-" + schoolYearSchedule.SchoolYear.EndYear}</option>
+				{/each}
 			</Input>
 		</FormGroup>
 		<Table size="sm" striped>
 			<thead>
 				<tr>
 					<th scope="col" class="text-center">DAY</th>
+					<th scope="col" class="text-center">OFF?</th>
 					<th scope="col" class="text-center">START HOUR</th>
 					<th scope="col" class="text-center">START MINUTE</th>
 					<th scope="col" class="text-center">END HOUR</th>
@@ -120,6 +94,7 @@
 					{#if day != "SchoolYear"}
 						<tr>
 							<td class="text-center fw-bold">{day.toUpperCase()}</td>
+							<td class="text-center"><Input disabled type="checkbox" bind:checked={(time as DayTimeRange).DayOff} /></td>
 							<td class="text-center">{(time as DayTimeRange).StartTimeHour}</td>
 							<td class="text-center">{(time as DayTimeRange).StartTimeMinute}</td>
 							<td class="text-center">{(time as DayTimeRange).EndTimeHour}</td>

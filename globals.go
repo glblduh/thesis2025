@@ -12,6 +12,17 @@ var (
 	Error = log.New(os.Stderr, "["+time.Now().Format("2006/01/02 15:04:05")+"] [ERROR] ", log.Lmsgprefix)
 )
 
+type AttendanceState string
+
+const (
+	DAYOFF   AttendanceState = "DAYOFF"
+	LEAVE    AttendanceState = "LEAVE"
+	ATTENDED AttendanceState = "ATTENDED"
+	LATE     AttendanceState = "LATE"
+	NOOUT    AttendanceState = "NOOUT"
+	ABSENT   AttendanceState = "ABSENT"
+)
+
 type (
 	schoolYearRange struct {
 		StartYear int
@@ -19,7 +30,7 @@ type (
 	}
 
 	dayTimeRange struct {
-		Change          bool
+		DayOff          bool
 		StartTimeHour   int
 		StartTimeMinute int
 		EndTimeHour     int
@@ -47,14 +58,14 @@ type (
 	}
 
 	attendanceTime struct {
-		DontChange bool
-		Hour       int
-		Minute     int
-		Unix       int
+		Hour   int
+		Minute int
+		Unix   int
 	}
 
 	attendance struct {
-		State   string
+		Date    dayDate
+		State   AttendanceState
 		Reason  string
 		TimeIn  attendanceTime
 		TimeOut attendanceTime
@@ -119,7 +130,7 @@ type (
 
 	apiGetAttendanceRes struct {
 		IdNumber int
-		State    string
+		State    AttendanceState
 		Reason   string
 		TimeIn   attendanceTime
 		TimeOut  attendanceTime

@@ -40,10 +40,6 @@ func decodeBody(w http.ResponseWriter, body io.Reader, v any) error {
 }
 
 func writeDaySchedule(schoolYearBucket *bbolt.Bucket, dayName string, daySchedule dayTimeRange) error {
-	if !daySchedule.Change {
-		return nil
-	}
-
 	dayScheduleByte, scheduleMarshalErr := json.Marshal(daySchedule)
 	if scheduleMarshalErr != nil {
 		return scheduleMarshalErr
@@ -113,27 +109,27 @@ func createSchoolYearString(startYear int, endYear int) string {
 	return strconv.Itoa(startYear) + "-" + strconv.Itoa(endYear)
 }
 
-func splitSchoolYear(schoolYearString string) (int, int, error) {
+func splitSchoolYear(schoolYearString string) (schoolYearRange, error) {
+	schoolYearStruct := schoolYearRange{}
 	schoolYear := strings.Split(schoolYearString, "-")
 	schoolYearStart, schoolYearConvertErr := strconv.Atoi(schoolYear[0])
 	if schoolYearConvertErr != nil {
-		return 0, 0, schoolYearConvertErr
+		return schoolYearStruct, schoolYearConvertErr
 	}
 	schoolYearEnd, schoolYearConvertErr := strconv.Atoi(schoolYear[1])
 	if schoolYearConvertErr != nil {
-		return 0, 0, schoolYearConvertErr
+		return schoolYearStruct, schoolYearConvertErr
 	}
-	return schoolYearStart, schoolYearEnd, nil
+	schoolYearStruct.StartYear = schoolYearStart
+	schoolYearStruct.EndYear = schoolYearEnd
+	return schoolYearStruct, nil
 }
 
 func createSchoolYearStruct(schoolYear string) (schoolYearRange, error) {
-	schoolYearStruct := schoolYearRange{}
-	startYear, endYear, splitSchoolYearErr := splitSchoolYear(schoolYear)
+	schoolYearStruct, splitSchoolYearErr := splitSchoolYear(schoolYear)
 	if splitSchoolYearErr != nil {
 		return schoolYearStruct, splitSchoolYearErr
 	}
-	schoolYearStruct.StartYear = startYear
-	schoolYearStruct.EndYear = endYear
 	return schoolYearStruct, nil
 }
 
@@ -151,42 +147,89 @@ func checkIfWorkingDay(scheduleBucket *bbolt.Bucket, schoolYear schoolYearRange,
 	return true, nil
 }
 
-func getAttendanceState(dayBucket *bbolt.Bucket, scheduleBucket *bbolt.Bucket, schoolYear schoolYearRange, date dayDate) (attendance, error) {
+func getLatestSchoolYear(scheduleBucket *bbolt.Bucket) (schoolYearRange, string, error) {
+	date := time.Now()
+	currentYearString := strconv.Itoa(date.Year())
+	lastestSchoolYearStruct := schoolYearRange{}
+	lastestSchoolYear := ""
+
+	lastSchoolYearSum := 0
+	scheduleBucketCursor := scheduleBucket.Cursor()
+	for schoolYear, _ := scheduleBucketCursor.First(); schoolYear != nil; schoolYear, _ = scheduleBucketCursor.Next() {
+		schoolYearString := string(schoolYear)
+		if !strings.Contains(schoolYearString, currentYearString) {
+			continue
+		}
+
+		splittedSchoolYear, schoolYearSplitErr := splitSchoolYear(schoolYearString)
+		if schoolYearSplitErr != nil {
+			return lastestSchoolYearStruct, lastestSchoolYear, schoolYearSplitErr
+		}
+
+		schoolYearSum := splittedSchoolYear.StartYear + splittedSchoolYear.EndYear
+		if schoolYearSum > lastSchoolYearSum {
+			lastSchoolYearSum = schoolYearSum
+			lastestSchoolYearStruct = splittedSchoolYear
+			lastestSchoolYear = schoolYearString
+		}
+	}
+
+	return lastestSchoolYearStruct, lastestSchoolYear, nil
+}
+
+func getDaySchedule(schoolYear schoolYearRange, date dayDate, scheduleBucket *bbolt.Bucket) (dayTimeRange, error) {
+	daySchedule := dayTimeRange{}
+
+	parsedDate := time.Date(date.Year, time.Month(date.Month), date.Day, 0, 0, 0, 0, time.UTC)
+	schoolYearString := createSchoolYearString(schoolYear.StartYear, schoolYear.EndYear)
+
+	scheduleBucketCursor := scheduleBucket.Cursor()
+	for schoolYear, _ := scheduleBucketCursor.First(); schoolYear != nil; schoolYear, _ = scheduleBucketCursor.Next() {
+		if schoolYearString != string(schoolYear) {
+			continue
+		}
+
+		dayBucket := scheduleBucket.Bucket(schoolYear)
+		dayByteSchedule := dayBucket.Get([]byte(parsedDate.Weekday().String()))
+
+		unmarshalErr := json.Unmarshal(dayByteSchedule, &daySchedule)
+		if unmarshalErr != nil {
+			return daySchedule, unmarshalErr
+		}
+		break
+	}
+
+	return daySchedule, nil
+}
+
+func createAttendanceStruct(attendanceDayBucket *bbolt.Bucket) (attendance, error) {
 	attendanceStruct := attendance{}
 
-	isWorkingDay, checkWorkingDayErr := checkIfWorkingDay(scheduleBucket, schoolYear, date)
-	if checkWorkingDayErr != nil {
-		return attendanceStruct, checkWorkingDayErr
-	}
-
-	leaveReason := dayBucket.Get([]byte("LEAVE"))
-	if leaveReason != nil {
-		attendanceStruct.State = "LEAVE"
-		attendanceStruct.Reason = string(leaveReason)
+	if attendanceDayBucket == nil {
+		attendanceStruct.State = ABSENT
 		return attendanceStruct, nil
 	}
 
-	if !isWorkingDay {
-		attendanceStruct.State = "DAYOFF"
-		return attendanceStruct, nil
+	state := string(attendanceDayBucket.Get([]byte("STATE")))
+	dateByte := attendanceDayBucket.Get([]byte("DATE"))
+	timeInByte := attendanceDayBucket.Get([]byte("TIMEIN"))
+	timeOutByte := attendanceDayBucket.Get([]byte("TIMEOUT"))
+
+	unmarshalErr := json.Unmarshal(timeInByte, &attendanceStruct.TimeIn)
+	if unmarshalErr != nil {
+		return attendanceStruct, unmarshalErr
 	}
 
-	if isWorkingDay && dayBucket == nil {
-		attendanceStruct.State = "ABSENT"
-		return attendanceStruct, nil
+	unmarshalErr = json.Unmarshal(timeOutByte, &attendanceStruct.TimeOut)
+	if unmarshalErr != nil {
+		return attendanceStruct, unmarshalErr
 	}
 
-	timeInUnmarshalErr := json.Unmarshal(dayBucket.Get([]byte("TIMEIN")), &attendanceStruct.TimeIn)
-	if timeInUnmarshalErr != nil {
-		return attendanceStruct, timeInUnmarshalErr
+	unmarshalErr = json.Unmarshal(dateByte, &attendanceStruct.Date)
+	if unmarshalErr != nil {
+		return attendanceStruct, unmarshalErr
 	}
 
-	timeOutUnmarshalErr := json.Unmarshal(dayBucket.Get([]byte("TIMEOUT")), &attendanceStruct.TimeOut)
-	if timeOutUnmarshalErr != nil {
-		return attendanceStruct, timeOutUnmarshalErr
-	}
-
-	attendanceStruct.State = "ATTENDED"
-
+	attendanceStruct.State = AttendanceState(state)
 	return attendanceStruct, nil
 }

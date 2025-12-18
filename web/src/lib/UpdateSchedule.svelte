@@ -3,47 +3,24 @@
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
 	import 'bootstrap-icons/font/bootstrap-icons.css';
 	import { Button, Modal, ModalBody, FormGroup, Input, Table, InputGroup, Form, ModalFooter } from "@sveltestrap/sveltestrap";
+	import type { ApiRes, Schedule, SchoolYearRange, DayTimeRange } from "./utils";
 
 	let { isModalOpen, modalToggle } = $props();
 
-	interface schoolYearRange {
-		StartYear: number,
-		EndYear: number
-	}
-
-	interface DayTimeRange {
-		Change: boolean,
-		StartTimeHour: number,
-		StartTimeMinute: number,
-		EndTimeHour: number,
-		EndTimeMinute: number
-	}
-
-	interface Schedule {
-		SchoolYear: schoolYearRange,
-		Monday: DayTimeRange,
-		Tuesday: DayTimeRange,
-		Wednesday: DayTimeRange,
-		Thursday: DayTimeRange,
-		Friday: DayTimeRange,
-		Saturday: DayTimeRange,
-		Sunday: DayTimeRange
-	}
-
-	interface addScheduleBody {
+	interface AddScheduleBody {
 		IdNumber: number,
 		Schedule: Schedule
 	}
 
 	const defaultSchedulesState: Schedule = {
 		SchoolYear: {StartYear: 0, EndYear: 0},
-		Monday: {Change: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
-		Tuesday: {Change: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
-		Wednesday: {Change: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
-		Thursday: {Change: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
-		Friday: {Change: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
-		Saturday: {Change: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
-		Sunday: {Change: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
+		Monday: {DayOff: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
+		Tuesday: {DayOff: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
+		Wednesday: {DayOff: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
+		Thursday: {DayOff: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
+		Friday: {DayOff: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
+		Saturday: {DayOff: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
+		Sunday: {DayOff: false, StartTimeHour: 0, StartTimeMinute: 0, EndTimeHour: 0, EndTimeMinute: 0},
 	};
 
 	let schedules = $state(defaultSchedulesState) as Schedule;
@@ -75,7 +52,7 @@
 	}
 
 	async function addSchedule() {
-		let requestBody: addScheduleBody = {
+		let requestBody: AddScheduleBody = {
 			IdNumber: idNumber,
 			Schedule: schedules
 		};
@@ -97,8 +74,8 @@
 		<Table size="sm" striped responsive>
 			<thead>
 				<tr>
-					<th scope="col" class="text-center">CHANGE?</th>
 					<th scope="col" class="text-center">DAY</th>
+					<th scope="col" class="text-center">OFF?</th>
 					<th scope="col" class="text-center">START HOUR</th>
 					<th scope="col" class="text-center">START MINUTE</th>
 					<th scope="col" class="text-center">END HOUR</th>
@@ -109,12 +86,37 @@
 				{#each Object.entries(schedules) as [day, time]}
 					{#if day != "SchoolYear"}
 						<tr>
-							<td><Input type="checkbox" bind:checked={(time as DayTimeRange).Change} /></td>
 							<td class="text-center fw-bold">{day.toUpperCase()}</td>
-							<td><Input type="number" disabled={!(time as DayTimeRange).Change} min=0 max=23 bind:value={(time as DayTimeRange).StartTimeHour} /></td>
-							<td><Input type="number" disabled={!(time as DayTimeRange).Change} min=0 max=59 bind:value={(time as DayTimeRange).StartTimeMinute} /></td>
-							<td><Input type="number" disabled={!(time as DayTimeRange).Change} min=0 max=23 bind:value={(time as DayTimeRange).EndTimeHour} /></td>
-							<td><Input type="number" disabled={!(time as DayTimeRange).Change} min=0 max=59 bind:value={(time as DayTimeRange).EndTimeMinute} /></td>
+							<td><Input type="checkbox" bind:checked={(time as DayTimeRange).DayOff} /></td>
+							<td>
+								<Input bind:disabled={(time as DayTimeRange).DayOff} type="select" bind:value={(time as DayTimeRange).StartTimeHour}>
+									{#each Array.from(Array(24).keys()) as hour }
+										<option>{hour}</option>
+									{/each}
+								</Input>
+							</td>
+							<td>
+								<Input bind:disabled={(time as DayTimeRange).DayOff} type="select" bind:value={(time as DayTimeRange).StartTimeMinute}>
+									{#each Array.from(Array(60).keys()) as minute }
+										<option>{minute}</option>
+									{/each}
+								</Input>
+							</td>
+							<td>
+								<Input bind:disabled={(time as DayTimeRange).DayOff} type="select" bind:value={(time as DayTimeRange).EndTimeHour}>
+									{#each Array.from(Array(24).keys()) as hour }
+										<option>{hour}</option>
+									{/each}
+								</Input>
+							</td>
+							<td>
+								<Input bind:disabled={(time as DayTimeRange).DayOff} type="select" bind:value={(time as DayTimeRange).EndTimeMinute}>
+									{#each Array.from(Array(60).keys()) as minute }
+										<option>{minute}</option>
+									{/each}
+								</Input>
+
+							</td>
 						</tr>
 					{/if}
 				{/each}

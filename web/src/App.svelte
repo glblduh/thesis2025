@@ -79,8 +79,12 @@
 		removeEmployeeModalState = !removeEmployeeModalState;
 	}
 
+	let employeeAttendancesModal: Attendances;
 	let employeeAttendancesModalState = false;
 	function employeeAttendancesModalToggle() {
+		if (!employeeAttendancesModalState) {
+			employeeAttendancesModal.init(selectedEmployee);
+		}
 		employeeAttendancesModalState = !employeeAttendancesModalState;
 	}
 
@@ -88,7 +92,7 @@
 	let employeeSchedulesModalState = false;
 	function employeeSchedulesModalToggle() {
 		if (!employeeSchedulesModalState) {
-			employeeSchedulesModal.getSchedules(selectedEmployee);
+			employeeSchedulesModal.init(selectedEmployee);
 		}
 		employeeSchedulesModalState = !employeeSchedulesModalState;
 	}
@@ -98,6 +102,7 @@
 	<AddEmployee isModalOpen={addEmployeeModalState} modalToggle={addEmployeeModalToggle} refreshList={parseEmployees} />
 	<RemoveEmployee isModalOpen={removeEmployeeModalState} modalToggle={removeEmployeeModalToggle} refreshList={parseEmployees} idNumber={selectedEmployee} />
 	<Schedules bind:this={employeeSchedulesModal} isModalOpen={employeeSchedulesModalState} modalToggle={employeeSchedulesModalToggle} />
+	<Attendances bind:this={employeeAttendancesModal} isModalOpen={employeeAttendancesModalState} modalToggle={employeeAttendancesModalToggle} />
 
 	<Navbar fixed="top" sticky="top">
 		<NavbarBrand href="/" class="fw-bold">Attendance Viewer</NavbarBrand>
@@ -124,7 +129,7 @@
 					<tr>
 						<td>
 							<ButtonGroup vertical size="sm">
-								<Button color="primary">Attendances</Button>
+								<Button color="primary" on:click={() => {selectEmployee(employee.idNumber); employeeAttendancesModalToggle();}}>Attendances</Button>
 								<Button color="primary" on:click={() => {selectEmployee(employee.idNumber); employeeSchedulesModalToggle();}}>Schedules</Button>
 								<Button color="danger" on:click={() => {selectEmployee(employee.idNumber); removeEmployeeModalToggle();}}>Remove</Button>
 							</ButtonGroup>
