@@ -141,13 +141,13 @@ func apiGetEmployee(w http.ResponseWriter, r *http.Request) {
 	encodeRes(w, employeeStruct)
 }
 
-func apiAddAttendance(w http.ResponseWriter, r *http.Request) {
-	body := apiAddAttendanceBodyRes{}
+func apiUpdateAttendance(w http.ResponseWriter, r *http.Request) {
+	body := apiUpdateAttendanceBodyRes{}
 	if decodeBody(w, r.Body, &body) != nil {
 		return
 	}
 
-	addAttendanceErr := updateAttendance(strconv.Itoa(body.IdNumber), body.AttendanceTime)
+	addAttendanceErr := updateAttendance(strconv.Itoa(body.IdNumber), body.Attendance)
 	if addAttendanceErr != nil {
 		errorRes(w, addAttendanceErr.Error(), http.StatusInternalServerError)
 		return
@@ -157,40 +157,123 @@ func apiAddAttendance(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiGetAttendance(w http.ResponseWriter, r *http.Request) {
-	body := apiGetAttendanceBody{}
-	if decodeBody(w, r.Body, &body) != nil {
+	httpVars := mux.Vars(r)
+
+	idNumber, httpVarUnescapeErr := url.QueryUnescape(httpVars["idNumber"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	idNumberInt, convertErr := strconv.Atoi(idNumber)
+	if convertErr != nil {
+		errorRes(w, convertErr.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	employeeAttendance, getAttendanceErr := getAttendance(strconv.Itoa(body.IdNumber), body.SchoolYear, body.Date)
+	schoolYear, httpVarUnescapeErr := url.QueryUnescape(httpVars["schoolYear"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	yearString, httpVarUnescapeErr := url.QueryUnescape(httpVars["year"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	yearInt, convertErr := strconv.Atoi(yearString)
+	if convertErr != nil {
+		errorRes(w, convertErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	monthString, httpVarUnescapeErr := url.QueryUnescape(httpVars["month"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	monthInt, convertErr := strconv.Atoi(monthString)
+	if convertErr != nil {
+		errorRes(w, convertErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	dayString, httpVarUnescapeErr := url.QueryUnescape(httpVars["day"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	dayInt, convertErr := strconv.Atoi(dayString)
+	if convertErr != nil {
+		errorRes(w, convertErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	employeeAttendance, getAttendanceErr := getAttendance(idNumber, schoolYear, dayDate{
+		Year: yearInt,
+		Month: monthInt,
+		Day: dayInt,
+	})
 	if getAttendanceErr != nil {
 		errorRes(w, getAttendanceErr.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	encodeRes(w, apiGetAttendanceRes{
-		IdNumber: body.IdNumber,
+		IdNumber: idNumberInt,
 		State:    employeeAttendance.State,
-		Reason:   employeeAttendance.Reason,
 		TimeIn:   employeeAttendance.TimeIn,
 		TimeOut:  employeeAttendance.TimeOut,
 	})
 }
 
 func apiGetMonthAttendances(w http.ResponseWriter, r *http.Request) {
-	body := apiGetAttendanceBody{}
-	if decodeBody(w, r.Body, &body) != nil {
+	httpVars := mux.Vars(r)
+
+	idNumber, httpVarUnescapeErr := url.QueryUnescape(httpVars["idNumber"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	employeeMonthAttendances, getMonthAttendancesErr := getMonthAttendances(strconv.Itoa(body.IdNumber), body.SchoolYear, body.Date)
+	schoolYear, httpVarUnescapeErr := url.QueryUnescape(httpVars["schoolYear"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	yearString, httpVarUnescapeErr := url.QueryUnescape(httpVars["year"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	yearInt, convertErr := strconv.Atoi(yearString)
+	if convertErr != nil {
+		errorRes(w, convertErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	monthString, httpVarUnescapeErr := url.QueryUnescape(httpVars["month"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	monthInt, convertErr := strconv.Atoi(monthString)
+	if convertErr != nil {
+		errorRes(w, convertErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	employeeMonthAttendances, getMonthAttendancesErr := getMonthAttendances(idNumber, schoolYear, dayDate{
+		Year: yearInt,
+		Month: monthInt,
+	})
 	if getMonthAttendancesErr != nil {
 		errorRes(w, getMonthAttendancesErr.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	encodeRes(w, apiGetMonthAttendancesRes{
-		IdNumber:    body.IdNumber,
 		Attendances: employeeMonthAttendances,
 	})
 }
@@ -214,6 +297,55 @@ func apiRemoveSchedule(w http.ResponseWriter, r *http.Request) {
 	removeScheduleErr := removeSchedule(strconv.Itoa(body.IdNumber), body.SchoolYear)
 	if removeScheduleErr != nil {
 		errorRes(w, removeScheduleErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	encodeRes(w, body)
+}
+
+func apiGetAttendancesDates(w http.ResponseWriter, r*http.Request) {
+	httpVars := mux.Vars(r)
+
+	idNumber, httpVarUnescapeErr := url.QueryUnescape(httpVars["idNumber"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	date := dayDate{Year: 0, Month: 0, Day: 0}
+	yearUnescaped, isOk := httpVars["year"]
+	if isOk {
+		yearString, httpVarUnescapeErr := url.QueryUnescape(yearUnescaped)
+		if httpVarUnescapeErr != nil {
+			errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+			return
+		}
+		yearInt, convertErr := strconv.Atoi(yearString)
+		if convertErr != nil {
+			errorRes(w, convertErr.Error(), http.StatusInternalServerError)
+			return
+		}
+		date.Year = yearInt
+	}
+
+	dates, getDatesErr := getAttendancesDates(idNumber, date)
+	if getDatesErr != nil {
+		errorRes(w, getDatesErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	encodeRes(w, dates)
+}
+
+func apiRemoveAttendance(w http.ResponseWriter, r *http.Request) {
+	body := apiRemoveAttendanceBodyRes{}
+	if decodeBody(w, r.Body, &body) != nil {
+		return
+	}
+
+	removeErr := removeAttendance(strconv.Itoa(body.IdNumber), body.Date)
+	if removeErr != nil {
+		errorRes(w, removeErr.Error(), http.StatusInternalServerError)
 		return
 	}
 

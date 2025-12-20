@@ -25,17 +25,20 @@ func main() {
 
 	apiPostRouter.HandleFunc("/addemployee", apiAddEmployee)
 	apiPostRouter.HandleFunc("/updateschedule", apiUpdateSchedule)
-	apiPostRouter.HandleFunc("/addattendance", apiAddAttendance)
+	apiPostRouter.HandleFunc("/updateattendance", apiUpdateAttendance)
 
 	apiDeleteRouter.HandleFunc("/removeemployee", apiRemoveEmployee)
 	apiDeleteRouter.HandleFunc("/removeschedule", apiRemoveSchedule)
+	apiDeleteRouter.HandleFunc("/removeattendance", apiRemoveAttendance)
 
 	apiGetRouter.HandleFunc("/getallschedule/{idNumber}", apiGetAllYearsSchedule)
 	apiGetRouter.HandleFunc("/getschedule/{idNumber}/{schoolYear}", apiGetSchedule)
 	apiGetRouter.HandleFunc("/getemployee/{idNumber}", apiGetEmployee)
-	apiGetRouter.HandleFunc("/getattendance", apiGetAttendance)
-	apiGetRouter.HandleFunc("/getmonthattendances", apiGetMonthAttendances)
+	apiGetRouter.HandleFunc("/getattendance/{idNumber}/{schoolYear}/{year}/{month}/{day}", apiGetAttendance)
+	apiGetRouter.HandleFunc("/getmonthattendances/{idNumber}/{schoolYear}/{year}/{month}", apiGetMonthAttendances)
 	apiGetRouter.HandleFunc("/getallemployees", apiGetAllEmployees)
+	apiGetRouter.HandleFunc("/getallattendancesyears/{idNumber}", apiGetAttendancesDates)
+	apiGetRouter.HandleFunc("/getallattendancesmonths/{idNumber}/{year}", apiGetAttendancesDates)
 
 	svelteFS, fsErr := fs.Sub(svelteFiles, "web/dist")
 	if fsErr != nil {

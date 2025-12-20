@@ -333,29 +333,11 @@ func updateAttendance(idNumber string, attendanceStruct attendance) error {
 		}
 
 		if attendanceStruct.State == LEAVE {
-			statePutErr := dayBucket.Put([]byte("STATE"), []byte(attendanceStruct.State))
+			statePutErr := dayBucket.Put([]byte("LEAVE"), []byte(""))
 			if statePutErr != nil {
 				return statePutErr
 			}
-			reasonPutErr := dayBucket.Put([]byte("REASON"), []byte(attendanceStruct.Reason))
-			if reasonPutErr != nil {
-				return reasonPutErr
-			}
 			return nil
-		}
-
-		statePutErr := dayBucket.Put([]byte("STATE"), []byte(attendanceStruct.State))
-		if statePutErr != nil {
-			return statePutErr
-		}
-
-		dateByte, marshalErr := json.Marshal(attendanceStruct.Date)
-		if marshalErr != nil {
-			return marshalErr
-		}
-		datePutErr := dayBucket.Put([]byte("DATE"), dateByte)
-		if datePutErr != nil {
-			return datePutErr
 		}
 
 		timeInByte, timeInMarshalErr := json.Marshal(attendanceStruct.TimeIn)
@@ -380,7 +362,7 @@ func updateAttendance(idNumber string, attendanceStruct attendance) error {
 	})
 }
 
-func getAttendance(idNumber string, date dayDate) (attendance, error) {
+func getAttendance(idNumber string, schoolYearString string, date dayDate) (attendance, error) {
 	attendanceStruct := attendance{}
 
 	employeeStruct, verifyErr := getEmployee(idNumber)
@@ -397,6 +379,11 @@ func getAttendance(idNumber string, date dayDate) (attendance, error) {
 	dbViewErr := db.View(func(tx *bbolt.Tx) error {
 		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Attendance"))
 
+		schoolYearScheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule")).Bucket([]byte(schoolYearString))
+		if schoolYearScheduleBucket == nil {
+			return errors.New("school year not found")
+		}
+
 		yearBucket := attendanceBucket.Bucket([]byte(strconv.Itoa(date.Year)))
 		if yearBucket == nil {
 			return errors.New("year not found")
@@ -412,8 +399,17 @@ func getAttendance(idNumber string, date dayDate) (attendance, error) {
 			return errors.New("day not found")
 		}
 
+		parsedDay := time.Date(date.Year, time.Month(date.Month), date.Day, 0, 0, 0, 0, time.UTC)
+		dayScheduleByte := schoolYearScheduleBucket.Get([]byte(parsedDay.Weekday().String()))
+		dayScheduleStruct := dayTimeRange{}
+
+		unmarshalErr := json.Unmarshal(dayScheduleByte, &dayScheduleStruct)
+		if unmarshalErr != nil {
+			return unmarshalErr
+		}
+
 		var createAttendanceErr error
-		attendanceStruct, createAttendanceErr = createAttendanceStruct(dayBucket)
+		attendanceStruct, createAttendanceErr = createAttendanceStruct(dayBucket, date, dayScheduleStruct)
 		if createAttendanceErr != nil {
 			return createAttendanceErr
 		}
@@ -427,7 +423,7 @@ func getAttendance(idNumber string, date dayDate) (attendance, error) {
 	return attendanceStruct, nil
 }
 
-func getMonthAttendances(idNumber string, date dayDate) ([]attendance, error) {
+func getMonthAttendances(idNumber string, schoolYearString string, date dayDate) ([]attendance, error) {
 	monthAttendances := []attendance{}
 
 	employeeStruct, verifyErr := getEmployee(idNumber)
@@ -444,6 +440,11 @@ func getMonthAttendances(idNumber string, date dayDate) ([]attendance, error) {
 	dbViewErr := db.View(func(tx *bbolt.Tx) error {
 		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Attendance"))
 
+		schoolYearScheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule")).Bucket([]byte(schoolYearString))
+		if schoolYearScheduleBucket == nil {
+			return errors.New("school year not found")
+		}
+
 		yearBucket := attendanceBucket.Bucket([]byte(strconv.Itoa(date.Year)))
 		if yearBucket == nil {
 			return errors.New("year not found")
@@ -457,7 +458,20 @@ func getMonthAttendances(idNumber string, date dayDate) ([]attendance, error) {
 		parsedDate := time.Date(date.Year, time.Month(date.Month)+1, 0, 0, 0, 0, 0, time.UTC)
 		for i := 1; i <= parsedDate.Day(); i++ {
 			dayBucket := monthBucket.Bucket([]byte(strconv.Itoa(i)))
-			dayAttendance, createAttendanceErr := createAttendanceStruct(dayBucket)
+			parsedDay := time.Date(date.Year, time.Month(date.Month), i, 0, 0, 0, 0, time.UTC)
+			dayScheduleByte := schoolYearScheduleBucket.Get([]byte(parsedDay.Weekday().String()))
+			dayScheduleStruct := dayTimeRange{}
+
+			unmarshalErr := json.Unmarshal(dayScheduleByte, &dayScheduleStruct)
+			if unmarshalErr != nil {
+				return unmarshalErr
+			}
+
+			dayAttendance, createAttendanceErr := createAttendanceStruct(dayBucket, dayDate{
+				Year: date.Year,
+				Month: date.Month,
+				Day: i,
+			}, dayScheduleStruct)
 			if createAttendanceErr != nil {
 				return createAttendanceErr
 			}
@@ -531,5 +545,156 @@ func removeSchedule(idNumber string, schoolYear string) error {
 
 	return db.Update(func(tx *bbolt.Tx) error {
 		return tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule")).DeleteBucket([]byte(schoolYear))
+	})
+}
+
+func getAttendancesDates(idNumber string, date dayDate) (attendanceDates, error) {
+	dates := attendanceDates{}
+
+	employeeStruct, verifyErr := getEmployee(idNumber)
+	if verifyErr != nil {
+		return dates, verifyErr
+	}
+
+	db, dbErr := openDB()
+	if dbErr != nil {
+		return dates, dbErr
+	}
+	defer db.Close()
+
+	dbViewErr := db.View(func(tx *bbolt.Tx) error {
+		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Attendance"))
+
+		if date.Year != 0 {
+			yearString := strconv.Itoa(date.Year)
+
+			yearBucket := attendanceBucket.Bucket([]byte(yearString))
+			if yearBucket == nil {
+				return errors.New("year not found")
+			}
+
+			yearBucketCursor := yearBucket.Cursor()
+			for month, _ := yearBucketCursor.First(); month != nil; month, _ = yearBucketCursor.Next() {
+				monthString := string(month)
+				monthInt, convertErr := strconv.Atoi(monthString)
+				if convertErr != nil {
+					return convertErr
+				}
+				dates.Months = append(dates.Months, monthInt)
+			}
+			return nil
+		}
+
+		if date.Year != 0 && date.Month != 0 {
+			yearString := strconv.Itoa(date.Year)
+			monthString := strconv.Itoa(date.Month)
+
+			yearBucket := attendanceBucket.Bucket([]byte(yearString))
+			if yearBucket == nil {
+				return errors.New("year not found")
+			}
+
+			monthBucket := yearBucket.Bucket([]byte(monthString))
+			if monthBucket != nil {
+				return errors.New("month not found")
+			}
+
+			monthBucketCursor := monthBucket.Cursor()
+			for day, _ := monthBucketCursor.First(); day != nil; day, _ = monthBucketCursor.Next() {
+				dayString := string(day)
+				dayInt, convertErr := strconv.Atoi(dayString)
+				if convertErr != nil {
+					return convertErr
+				}
+				dates.Days = append(dates.Days, dayInt)
+			}
+			return nil
+		}
+
+		attendanceBucketCursor := attendanceBucket.Cursor()
+		for year, _ := attendanceBucketCursor.First(); year != nil; year, _ = attendanceBucketCursor.Next() {
+			yearString := string(year)
+			yearInt, convertErr := strconv.Atoi(yearString)
+			if convertErr != nil {
+				return convertErr
+			}
+			dates.Years = append(dates.Years, yearInt)
+		}
+		return nil
+	})
+	if dbViewErr != nil {
+		return dates, dbViewErr
+	}
+
+	return dates, nil
+}
+
+func checkIfBucketEmpty(bucket *bbolt.Bucket) bool {
+	bucketCursor := bucket.Cursor()
+	first, _ := bucketCursor.First()
+	return first == nil
+}
+
+func removeAttendance(idNumber string, date dayDate) error {
+	employeeStruct, verifyErr := getEmployee(idNumber)
+	if verifyErr != nil {
+		return verifyErr
+	}
+
+	db, dbErr := openDB()
+	if dbErr != nil {
+		return dbErr
+	}
+	defer db.Close()
+
+	month := date.Month
+	if month < 1 || month > 12 {
+		return errors.New("invalid month")
+	}
+
+	day := date.Day
+	if day < 1 || day > 31 {
+		return errors.New("invalid day")
+	}
+
+	year := date.Year
+	parseDate := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
+	if parseDate.Year() != year || parseDate.Month() != time.Month(month) || parseDate.Day() != day {
+		return errors.New("invalid date")
+	}
+
+	return db.Update(func(tx *bbolt.Tx) error {
+		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Attendance"))
+
+		yearBucket := attendanceBucket.Bucket([]byte(strconv.Itoa(date.Year)))
+		if yearBucket == nil {
+			return errors.New("year does not exist")
+		}
+
+		monthBucket := yearBucket.Bucket([]byte(strconv.Itoa(date.Month)))
+		if monthBucket == nil {
+			return errors.New("month does not exist")
+		}
+
+		removeDayErr := monthBucket.DeleteBucket([]byte(strconv.Itoa(date.Day)))
+		if removeDayErr != nil {
+			return removeDayErr
+		}
+
+		if checkIfBucketEmpty(monthBucket) {
+			removeMonthErr := yearBucket.DeleteBucket([]byte(strconv.Itoa(date.Month)))
+			if removeMonthErr != nil {
+				return removeMonthErr
+			}
+		}
+
+		if checkIfBucketEmpty(yearBucket) {
+			removeYearErr := yearBucket.DeleteBucket([]byte(strconv.Itoa(date.Year)))
+			if removeYearErr != nil {
+				return removeYearErr
+			}
+		}
+
+		return nil
 	})
 }

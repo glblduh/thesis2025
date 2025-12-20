@@ -15,12 +15,11 @@ var (
 type AttendanceState string
 
 const (
-	DAYOFF   AttendanceState = "DAYOFF"
-	LEAVE    AttendanceState = "LEAVE"
-	ATTENDED AttendanceState = "ATTENDED"
-	LATE     AttendanceState = "LATE"
-	NOOUT    AttendanceState = "NOOUT"
-	ABSENT   AttendanceState = "ABSENT"
+	DAYOFF    AttendanceState = "DAYOFF"
+	LEAVE     AttendanceState = "LEAVE"
+	ATTENDED  AttendanceState = "ATTENDED"
+	NOOUT     AttendanceState = "NOOUT"
+	ABSENT    AttendanceState = "ABSENT"
 )
 
 type (
@@ -66,7 +65,6 @@ type (
 	attendance struct {
 		Date    dayDate
 		State   AttendanceState
-		Reason  string
 		TimeIn  attendanceTime
 		TimeOut attendanceTime
 	}
@@ -80,6 +78,12 @@ type (
 	allEmployees struct {
 		Faculty []employee
 		Staff   []employee
+	}
+
+	attendanceDates struct {
+		Years  []int
+		Months []int
+		Days   []int
 	}
 )
 
@@ -115,16 +119,13 @@ type (
 		Schedule employeeSchedule
 	}
 
-	apiAddAttendanceBodyRes struct {
+	apiUpdateAttendanceBodyRes struct {
 		IdNumber       int
-		IsLeave        bool
-		LeaveReason    string
-		AttendanceTime attendance
+		Attendance     attendance
 	}
 
 	apiGetAttendanceBody struct {
 		IdNumber   int
-		SchoolYear schoolYearRange
 		Date       dayDate
 	}
 
@@ -137,12 +138,16 @@ type (
 	}
 
 	apiGetMonthAttendancesRes struct {
-		IdNumber    int
 		Attendances []attendance
 	}
 
 	apiRemoveScheduleBodyRes struct {
 		IdNumber   int
 		SchoolYear string
+	}
+
+	apiRemoveAttendanceBodyRes struct {
+		IdNumber   int
+		Date       dayDate
 	}
 )

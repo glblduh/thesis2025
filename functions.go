@@ -202,34 +202,47 @@ func getDaySchedule(schoolYear schoolYearRange, date dayDate, scheduleBucket *bb
 	return daySchedule, nil
 }
 
-func createAttendanceStruct(attendanceDayBucket *bbolt.Bucket) (attendance, error) {
+func createAttendanceStruct(attendanceDayBucket *bbolt.Bucket, date dayDate, daySchedule dayTimeRange) (attendance, error) {
 	attendanceStruct := attendance{}
+	attendanceStruct.Date = date
 
-	if attendanceDayBucket == nil {
+	if daySchedule.DayOff {
+		attendanceStruct.State = DAYOFF
+		return attendanceStruct, nil
+	}
+
+	if attendanceDayBucket != nil && attendanceDayBucket.Get([]byte("LEAVE")) != nil {
+		attendanceStruct.State = LEAVE
+		return attendanceStruct, nil
+	}
+
+	if attendanceDayBucket == nil && !daySchedule.DayOff {
 		attendanceStruct.State = ABSENT
 		return attendanceStruct, nil
 	}
 
-	state := string(attendanceDayBucket.Get([]byte("STATE")))
-	dateByte := attendanceDayBucket.Get([]byte("DATE"))
 	timeInByte := attendanceDayBucket.Get([]byte("TIMEIN"))
 	timeOutByte := attendanceDayBucket.Get([]byte("TIMEOUT"))
 
-	unmarshalErr := json.Unmarshal(timeInByte, &attendanceStruct.TimeIn)
-	if unmarshalErr != nil {
-		return attendanceStruct, unmarshalErr
+	if timeInByte != nil && timeOutByte == nil {
+		attendanceStruct.State = NOOUT
+		return attendanceStruct, nil
 	}
 
-	unmarshalErr = json.Unmarshal(timeOutByte, &attendanceStruct.TimeOut)
-	if unmarshalErr != nil {
-		return attendanceStruct, unmarshalErr
+	if timeInByte != nil {
+		unmarshalErr := json.Unmarshal(timeInByte, &attendanceStruct.TimeIn)
+		if unmarshalErr != nil {
+			return attendanceStruct, unmarshalErr
+		}
 	}
 
-	unmarshalErr = json.Unmarshal(dateByte, &attendanceStruct.Date)
-	if unmarshalErr != nil {
-		return attendanceStruct, unmarshalErr
+	if timeOutByte != nil {
+		unmarshalErr := json.Unmarshal(timeOutByte, &attendanceStruct.TimeOut)
+		if unmarshalErr != nil {
+			return attendanceStruct, unmarshalErr
+		}
 	}
 
-	attendanceStruct.State = AttendanceState(state)
+	attendanceStruct.State = AttendanceState(ATTENDED)
 	return attendanceStruct, nil
 }

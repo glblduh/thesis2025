@@ -87,7 +87,7 @@
 					{#if day != "SchoolYear"}
 						<tr>
 							<td class="text-center fw-bold">{day.toUpperCase()}</td>
-							<td><Input type="checkbox" bind:checked={(time as DayTimeRange).DayOff} /></td>
+							<td><Input type="switch" bind:checked={(time as DayTimeRange).DayOff} /></td>
 							<td>
 								<Input bind:disabled={(time as DayTimeRange).DayOff} type="select" bind:value={(time as DayTimeRange).StartTimeHour}>
 									{#each Array.from(Array(24).keys()) as hour }

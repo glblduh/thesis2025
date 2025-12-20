@@ -94,7 +94,7 @@
 					{#if day != "SchoolYear"}
 						<tr>
 							<td class="text-center fw-bold">{day.toUpperCase()}</td>
-							<td class="text-center"><Input disabled type="checkbox" bind:checked={(time as DayTimeRange).DayOff} /></td>
+							<td class="text-center"><Input disabled type="switch" bind:checked={(time as DayTimeRange).DayOff} /></td>
 							<td class="text-center">{(time as DayTimeRange).StartTimeHour}</td>
 							<td class="text-center">{(time as DayTimeRange).StartTimeMinute}</td>
 							<td class="text-center">{(time as DayTimeRange).EndTimeHour}</td>
