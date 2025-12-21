@@ -70,8 +70,7 @@
 			IdNumber: selectedEmployee,
 			Attendance: attendance
 		};
-		let gg = await fetch("/api/updateattendance", {method: "POST", body: JSON.stringify(body)});
-		console.log(await gg.json());
+		await fetch("/api/updateattendance", {method: "POST", body: JSON.stringify(body)});
 		clearVars();
 	}
 </script>

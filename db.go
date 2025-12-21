@@ -689,7 +689,7 @@ func removeAttendance(idNumber string, date dayDate) error {
 		}
 
 		if checkIfBucketEmpty(yearBucket) {
-			removeYearErr := yearBucket.DeleteBucket([]byte(strconv.Itoa(date.Year)))
+			removeYearErr := attendanceBucket.DeleteBucket([]byte(strconv.Itoa(date.Year)))
 			if removeYearErr != nil {
 				return removeYearErr
 			}
