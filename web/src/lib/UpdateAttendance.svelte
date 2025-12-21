@@ -30,6 +30,7 @@
 			selectedSchoolYear = schoolYear;
 			getYears();
 			attendance = selectedAttendance as Attendance;
+			isLeave = (selectedAttendance?.State == "LEAVE");
 		}
 	}
 
@@ -65,6 +66,8 @@
 	async function updateAttendance() {
 		if (isLeave) {
 			attendance.State = "LEAVE";
+		} else {
+			attendance.State = "";
 		}
 		let body: ApiBody = {
 			IdNumber: selectedEmployee,

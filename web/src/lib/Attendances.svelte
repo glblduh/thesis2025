@@ -148,11 +148,9 @@
 						{#if attendance.State != "ABSENT" && attendance.State != "DAYOFF"}
 							<td>
 								<ButtonGroup size="sm">
-									{#if attendance.State != "LEAVE"}
-										<Button color="info" on:click={() => {
-											updateAttendanceModal.init(selectedEmployee, true, schedules?.Schedules, selectedSchoolYear as string, attendance);
-											updateAttendanceModalToggle();}}>EDIT</Button>
-									{/if}
+									<Button color="info" on:click={() => {
+										updateAttendanceModal.init(selectedEmployee, true, schedules?.Schedules, selectedSchoolYear as string, attendance);
+										updateAttendanceModalToggle();}}>EDIT</Button>
 									<Button color="danger" on:click={() => {
 										removeAttendanceModal.init(selectedEmployee, attendance.Date);
 										removeAttendanceModalToggle();

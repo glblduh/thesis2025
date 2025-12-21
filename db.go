@@ -340,6 +340,11 @@ func updateAttendance(idNumber string, attendanceStruct attendance) error {
 			return nil
 		}
 
+		removeLeaveErr := dayBucket.Delete([]byte("LEAVE"))
+		if removeLeaveErr != nil {
+			return removeLeaveErr
+		}
+
 		timeInByte, timeInMarshalErr := json.Marshal(attendanceStruct.TimeIn)
 		if timeInMarshalErr != nil {
 			return timeInMarshalErr
