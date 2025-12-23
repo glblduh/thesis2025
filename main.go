@@ -26,6 +26,8 @@ func main() {
 	apiPostRouter.HandleFunc("/addemployee", apiAddEmployee)
 	apiPostRouter.HandleFunc("/updateschedule", apiUpdateSchedule)
 	apiPostRouter.HandleFunc("/updateattendance", apiUpdateAttendance)
+	apiPostRouter.HandleFunc("/updateattendance", apiUpdateAttendance)
+	apiPostRouter.HandleFunc("/attend/{idNumber}", apiAttend)
 
 	apiDeleteRouter.HandleFunc("/removeemployee", apiRemoveEmployee)
 	apiDeleteRouter.HandleFunc("/removeschedule", apiRemoveSchedule)

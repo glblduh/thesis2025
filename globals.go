@@ -13,6 +13,7 @@ var (
 )
 
 type AttendanceState string
+type AttendState     string
 
 const (
 	DAYOFF    AttendanceState = "DAYOFF"
@@ -20,6 +21,8 @@ const (
 	ATTENDED  AttendanceState = "ATTENDED"
 	NOOUT     AttendanceState = "NOOUT"
 	ABSENT    AttendanceState = "ABSENT"
+	TIMEIN    AttendState     = "TIMEIN"
+	TIMEOUT   AttendState     = "TIMEOUT"
 )
 
 type (
@@ -149,5 +152,11 @@ type (
 	apiRemoveAttendanceBodyRes struct {
 		IdNumber   int
 		Date       dayDate
+	}
+
+	apiAttendRes struct {
+		IdNumber int
+		State    AttendState
+		Time     attendanceTime
 	}
 )

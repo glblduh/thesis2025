@@ -224,16 +224,16 @@ func createAttendanceStruct(attendanceDayBucket *bbolt.Bucket, date dayDate, day
 	timeInByte := attendanceDayBucket.Get([]byte("TIMEIN"))
 	timeOutByte := attendanceDayBucket.Get([]byte("TIMEOUT"))
 
-	if timeInByte != nil && timeOutByte == nil {
-		attendanceStruct.State = NOOUT
-		return attendanceStruct, nil
-	}
-
 	if timeInByte != nil {
 		unmarshalErr := json.Unmarshal(timeInByte, &attendanceStruct.TimeIn)
 		if unmarshalErr != nil {
 			return attendanceStruct, unmarshalErr
 		}
+	}
+
+	if timeInByte != nil && timeOutByte == nil {
+		attendanceStruct.State = NOOUT
+		return attendanceStruct, nil
 	}
 
 	if timeOutByte != nil {

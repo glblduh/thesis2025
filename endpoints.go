@@ -351,3 +351,30 @@ func apiRemoveAttendance(w http.ResponseWriter, r *http.Request) {
 
 	encodeRes(w, body)
 }
+
+func apiAttend(w http.ResponseWriter, r *http.Request) {
+	httpVars := mux.Vars(r)
+
+	idNumber, httpVarUnescapeErr := url.QueryUnescape(httpVars["idNumber"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	idNumberInt, convertErr := strconv.Atoi(idNumber)
+	if convertErr != nil {
+		errorRes(w, convertErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	attendState, attendTime, checkAttendErr := checkAndAttend(idNumber)
+	if checkAttendErr != nil {
+		errorRes(w, checkAttendErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	encodeRes(w, apiAttendRes{
+		IdNumber: idNumberInt,
+		State: attendState,
+		Time: attendTime,
+	})
+}

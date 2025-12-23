@@ -703,3 +703,101 @@ func removeAttendance(idNumber string, date dayDate) error {
 		return nil
 	})
 }
+
+func checkAndAttend(idNumber string) (AttendState, attendanceTime, error) {
+	attendState := AttendState("");
+	attendTime := attendanceTime{}
+
+	employeeStruct, verifyErr := getEmployee(idNumber)
+	if verifyErr != nil {
+		return attendState, attendTime, verifyErr
+	}
+
+	db, dbErr := openDB()
+	if dbErr != nil {
+		return attendState, attendTime, dbErr
+	}
+	defer db.Close()
+
+	dbUpdate := db.Update(func(tx *bbolt.Tx) error {
+		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Attendance"))
+		scheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule"))
+
+		_, currentSchoolYearString, getSchoolYearErr := getLatestSchoolYear(scheduleBucket)
+		if getSchoolYearErr != nil {
+			return getSchoolYearErr
+		}
+		if currentSchoolYearString == "" {
+			return errors.New("current year does not belong to any registered school year")
+		}
+
+		currentTime := time.Now()
+		currentYear := currentTime.Year()
+		currentMonth := int(currentTime.Month())
+		currentDay := currentTime.Day()
+
+		currentDayScheduleStruct := dayTimeRange{}
+		currentDayScheduleByte := scheduleBucket.Bucket([]byte(currentSchoolYearString)).Get([]byte(currentTime.Weekday().String()))
+		unmarshalErr := json.Unmarshal(currentDayScheduleByte, &currentDayScheduleStruct)
+		if unmarshalErr != nil {
+			return unmarshalErr
+		}
+
+		if currentDayScheduleStruct.DayOff {
+			return errors.New("day off")
+		}
+
+		yearBucket, yearBucketErr := attendanceBucket.CreateBucketIfNotExists([]byte(strconv.Itoa(currentYear)))
+		if yearBucketErr != nil {
+			return yearBucketErr
+		}
+
+		monthBucket, monthBucketErr := yearBucket.CreateBucketIfNotExists([]byte(strconv.Itoa(currentMonth)))
+		if monthBucketErr != nil {
+			return monthBucketErr
+		}
+
+		dayBucket, dayBucketErr := monthBucket.CreateBucketIfNotExists([]byte(strconv.Itoa(currentDay)))
+		if dayBucketErr != nil {
+			return dayBucketErr
+		}
+
+		if dayBucket.Get([]byte("TIMEIN")) != nil && dayBucket.Get([]byte("TIMEOUT")) != nil {
+			return errors.New("attendance for today is already completed")
+		}
+
+		currentTimeStruct := attendanceTime{
+			Hour: currentTime.Hour(),
+			Minute: currentTime.Minute(),
+			Unix: int(currentTime.Unix()),
+		}
+		currentTimeByte, marshalErr := json.Marshal(currentTimeStruct)
+		if marshalErr != nil {
+			return marshalErr
+		}
+
+		if dayBucket.Get([]byte("TIMEIN")) != nil {
+			timeOutPutErr := dayBucket.Put([]byte("TIMEOUT"), currentTimeByte)
+			if timeOutPutErr != nil {
+				return timeOutPutErr
+			}
+			attendState = TIMEOUT
+			attendTime = currentTimeStruct
+			return nil
+		}
+
+		timeInPutErr := dayBucket.Put([]byte("TIMEIN"), currentTimeByte)
+		if timeInPutErr != nil {
+			return timeInPutErr
+		}
+
+		attendState = TIMEIN
+		attendTime = currentTimeStruct
+		return nil
+	})
+	if dbUpdate != nil {
+		return attendState, attendTime, dbUpdate
+	}
+
+	return attendState, attendTime, nil
+}
