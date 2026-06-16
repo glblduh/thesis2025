@@ -56,6 +56,12 @@ export interface Attendance {
 	State: string
 	TimeIn: AttendanceTime
 	TimeOut: AttendanceTime
+	Suspended: string
+}
+
+export interface SuspendedDay {
+	Date: DayDate
+	Type: string
 }
 
 export async function getSchedules(idNumber: number): Promise<ApiRes> {

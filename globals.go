@@ -14,15 +14,21 @@ var (
 
 type AttendanceState string
 type AttendState     string
+type SuspensionType  string
 
 const (
-	DAYOFF    AttendanceState = "DAYOFF"
-	LEAVE     AttendanceState = "LEAVE"
-	ATTENDED  AttendanceState = "ATTENDED"
-	NOOUT     AttendanceState = "NOOUT"
-	ABSENT    AttendanceState = "ABSENT"
-	TIMEIN    AttendState     = "TIMEIN"
-	TIMEOUT   AttendState     = "TIMEOUT"
+	DAYOFF     AttendanceState = "DAYOFF"
+	LEAVE      AttendanceState = "LEAVE"
+	ATTENDED   AttendanceState = "ATTENDED"
+	NOOUT      AttendanceState = "NOOUT"
+	ABSENT     AttendanceState = "ABSENT"
+
+	TIMEIN     AttendState     = "TIMEIN"
+	TIMEOUT    AttendState     = "TIMEOUT"
+
+	NOTSUSPENDED SuspensionType = "NOTSUSPENDED"
+	SUSPENSION   SuspensionType = "SUSPENSION"
+	HOLIDAY      SuspensionType = "HOLIDAY"
 )
 
 type (
@@ -66,10 +72,11 @@ type (
 	}
 
 	attendance struct {
-		Date    dayDate
-		State   AttendanceState
-		TimeIn  attendanceTime
-		TimeOut attendanceTime
+		Date      dayDate
+		State     AttendanceState
+		TimeIn    attendanceTime
+		TimeOut   attendanceTime
+		Suspended SuspensionType
 	}
 
 	dayDate struct {
@@ -87,6 +94,11 @@ type (
 		Years  []int
 		Months []int
 		Days   []int
+	}
+
+	suspendedDay struct {
+		Date dayDate
+		Type SuspensionType
 	}
 )
 
@@ -158,5 +170,14 @@ type (
 		IdNumber int
 		State    AttendState
 		Time     attendanceTime
+	}
+
+	apiAddSuspendedBodyRes struct {
+		Date dayDate
+		Type SuspensionType
+	}
+
+	apiRemoveSuspendedBodyRes struct {
+		Date dayDate
 	}
 )

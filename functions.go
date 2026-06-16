@@ -202,9 +202,10 @@ func getDaySchedule(schoolYear schoolYearRange, date dayDate, scheduleBucket *bb
 	return daySchedule, nil
 }
 
-func createAttendanceStruct(attendanceDayBucket *bbolt.Bucket, date dayDate, daySchedule dayTimeRange) (attendance, error) {
+func createAttendanceStruct(attendanceDayBucket *bbolt.Bucket, date dayDate, daySchedule dayTimeRange, suspended SuspensionType) (attendance, error) {
 	attendanceStruct := attendance{}
 	attendanceStruct.Date = date
+	attendanceStruct.Suspended = suspended
 
 	if daySchedule.DayOff {
 		attendanceStruct.State = DAYOFF
@@ -245,4 +246,32 @@ func createAttendanceStruct(attendanceDayBucket *bbolt.Bucket, date dayDate, day
 
 	attendanceStruct.State = AttendanceState(ATTENDED)
 	return attendanceStruct, nil
+}
+
+func checkIfBucketEmpty(bucket *bbolt.Bucket) bool {
+	bucketCursor := bucket.Cursor()
+	first, _ := bucketCursor.First()
+	return first == nil
+}
+
+func getDateSuspension(suspendedBucket *bbolt.Bucket, date dayDate) SuspensionType {
+	suspensionType := SuspensionType(NOTSUSPENDED)
+
+	yearBucket := suspendedBucket.Bucket([]byte(strconv.Itoa(date.Year)))
+
+	var monthBucket *bbolt.Bucket
+	if yearBucket != nil {
+		monthBucket = yearBucket.Bucket([]byte(strconv.Itoa(date.Month)))
+	}
+
+	var dayBucket *bbolt.Bucket
+	if monthBucket != nil {
+		dayBucket = monthBucket.Bucket([]byte(strconv.Itoa(date.Day)))
+	}
+
+	if dayBucket != nil {
+		suspensionType = SuspensionType((dayBucket.Get([]byte("TYPE"))))
+	}
+
+	return suspensionType
 }

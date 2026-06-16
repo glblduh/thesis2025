@@ -8,6 +8,8 @@
 	import RemoveEmployee from "./lib/RemoveEmployee.svelte";
 	import Attendances from "./lib/Attendances.svelte";
 	import Schedules from "./lib/Schedules.svelte";
+	import Suspension from "./lib/AddSuspension.svelte"
+    import AddSuspension from "./lib/AddSuspension.svelte";
 
 	let employees: Employee[] = [];
 	let selectedEmployee: number = 0;
@@ -96,6 +98,15 @@
 		}
 		employeeSchedulesModalState = !employeeSchedulesModalState;
 	}
+
+	let suspensionModal: Suspension;
+	let suspensionModalState = false;
+	function suspensionModalToggle() {
+		if (!suspensionModalState) {
+			suspensionModal.init();
+		}
+		suspensionModalState = !suspensionModalState;
+	}
 </script>
 
 <main>
@@ -103,11 +114,13 @@
 	<RemoveEmployee isModalOpen={removeEmployeeModalState} modalToggle={removeEmployeeModalToggle} refreshList={parseEmployees} idNumber={selectedEmployee} />
 	<Schedules bind:this={employeeSchedulesModal} isModalOpen={employeeSchedulesModalState} modalToggle={employeeSchedulesModalToggle} />
 	<Attendances bind:this={employeeAttendancesModal} isModalOpen={employeeAttendancesModalState} modalToggle={employeeAttendancesModalToggle} />
+	<AddSuspension bind:this={suspensionModal} isModalOpen={suspensionModalState} modalToggle={suspensionModalToggle} />
 
 	<Navbar fixed="top" sticky="top">
 		<NavbarBrand href="/" class="fw-bold">Attendance Viewer</NavbarBrand>
 		<ButtonGroup size="sm">
 			<Button color="success" on:click={addEmployeeModalToggle}><Icon name="person-plus-fill" class="fw-bold" /> Add Employee</Button>
+			<Button color="success" on:click={suspensionModalToggle}><Icon name="calendar-plus-fill" class="fw-bold" /> Add Suspension</Button>
 			<Button color="info" on:click={parseEmployees}><Icon name="arrow-clockwise" class="fw-bold" /> Refresh</Button>
 		</ButtonGroup>
 	</Navbar>

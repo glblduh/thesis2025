@@ -28,10 +28,12 @@ func main() {
 	apiPostRouter.HandleFunc("/updateattendance", apiUpdateAttendance)
 	apiPostRouter.HandleFunc("/updateattendance", apiUpdateAttendance)
 	apiPostRouter.HandleFunc("/attend/{idNumber}", apiAttend)
+	apiPostRouter.HandleFunc("/updatesuspended", apiUpdateSuspended)
 
 	apiDeleteRouter.HandleFunc("/removeemployee", apiRemoveEmployee)
 	apiDeleteRouter.HandleFunc("/removeschedule", apiRemoveSchedule)
 	apiDeleteRouter.HandleFunc("/removeattendance", apiRemoveAttendance)
+	apiDeleteRouter.HandleFunc("/removesuspended", apiRemoveSuspended)
 
 	apiGetRouter.HandleFunc("/getallschedule/{idNumber}", apiGetAllYearsSchedule)
 	apiGetRouter.HandleFunc("/getschedule/{idNumber}/{schoolYear}", apiGetSchedule)
@@ -41,6 +43,7 @@ func main() {
 	apiGetRouter.HandleFunc("/getallemployees", apiGetAllEmployees)
 	apiGetRouter.HandleFunc("/getallattendancesyears/{idNumber}", apiGetAttendancesDates)
 	apiGetRouter.HandleFunc("/getallattendancesmonths/{idNumber}/{year}", apiGetAttendancesDates)
+	apiGetRouter.HandleFunc("/getallsuspended", apiGetAllSuspended)
 
 	svelteFS, fsErr := fs.Sub(svelteFiles, "web/dist")
 	if fsErr != nil {

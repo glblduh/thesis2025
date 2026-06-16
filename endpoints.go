@@ -378,3 +378,43 @@ func apiAttend(w http.ResponseWriter, r *http.Request) {
 		Time: attendTime,
 	})
 }
+
+func apiUpdateSuspended(w http.ResponseWriter, r *http.Request) {
+	body := apiAddSuspendedBodyRes{}
+	if decodeBody(w, r.Body, &body) != nil {
+		return
+	}
+
+	updateSuspendedErr := updateSuspended(body.Date, body.Type)
+	if updateSuspendedErr != nil {
+		errorRes(w, updateSuspendedErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	encodeRes(w, body)
+}
+
+func apiRemoveSuspended(w http.ResponseWriter, r *http.Request) {
+	body := apiRemoveSuspendedBodyRes{}
+	if decodeBody(w, r.Body, &body) != nil {
+		return
+	}
+
+	removeSuspendedErr := removeSuspended(body.Date)
+	if removeSuspendedErr != nil {
+		errorRes(w, removeSuspendedErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	encodeRes(w, body)
+}
+
+func apiGetAllSuspended(w http.ResponseWriter, r *http.Request) {
+	allSuspended, getAllSuspendedErr := getAllSuspended()
+	if getAllSuspendedErr != nil {
+		errorRes(w, getAllSuspendedErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	encodeRes(w, allSuspended)
+}

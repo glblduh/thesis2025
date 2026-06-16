@@ -10,7 +10,8 @@
 		Date:{Year: 0, Month: 0, Day: 0},
 		State: "",
 		TimeIn: {Hour: 0, Minute: 0},
-		TimeOut: {Hour: 0, Minute: 0}
+		TimeOut: {Hour: 0, Minute: 0},
+		Suspended: ""
 	};
 
 	let { isModalOpen, modalToggle } = $props();
