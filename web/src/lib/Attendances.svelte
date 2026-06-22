@@ -124,51 +124,53 @@
 				</Input>
 			</FormGroup>
 		</InputGroup>
-		<Table striped size="sm" responsive>
-			<thead>
-				<tr>
-					<th scope="col" class="text-center">DATE</th>
-					<th scope="col" class="text-center">STATE</th>
-					<th scope="col" class="text-center">TIME IN HOUR</th>
-					<th scope="col" class="text-center">TIME IN MINUTE</th>
-					<th scope="col" class="text-center">TIME OUT HOUR</th>
-					<th scope="col" class="text-center">TIME OUT MINUTE</th>
-					<th scope="col" class="text-center">ACTION</th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each attendances as attendance}
+		{#if dates.Months != undefined && selectedDate.Month != null}
+			<Table striped size="sm" responsive>
+				<thead>
 					<tr>
-						<td class="text-center fw-bold">{attendance.Date.Day}</td>
-						<td class="text-center fw-bold">
-							{#if attendance.Suspended != "NOTSUSPENDED" }
-								<Badge color="info">{attendance.Suspended}</Badge>
-							{/if}
-							<Badge color={badgeColor(attendance.State)}>{attendance.State}</Badge>
-						</td>
-						<td class="text-center">{attendance.TimeIn.Hour}</td>
-						<td class="text-center">{attendance.TimeIn.Minute}</td>
-						<td class="text-center">{attendance.TimeOut.Hour}</td>
-						<td class="text-center">{attendance.TimeOut.Minute}</td>
-						{#if attendance.State != "ABSENT" && attendance.State != "DAYOFF"}
-							<td>
-								<ButtonGroup size="sm">
-									<Button color="info" on:click={() => {
-										updateAttendanceModal.init(selectedEmployee, true, schedules?.Schedules, selectedSchoolYear as string, attendance);
-										updateAttendanceModalToggle();}}>EDIT</Button>
-									<Button color="danger" on:click={() => {
-										removeAttendanceModal.init(selectedEmployee, attendance.Date);
-										removeAttendanceModalToggle();
-									}}>REMOVE</Button>
-								</ButtonGroup>
-							</td>
-						{:else}
-							<td></td>
-						{/if}
+						<th scope="col" class="text-center">DATE</th>
+						<th scope="col" class="text-center">STATE</th>
+						<th scope="col" class="text-center">TIME IN HOUR</th>
+						<th scope="col" class="text-center">TIME IN MINUTE</th>
+						<th scope="col" class="text-center">TIME OUT HOUR</th>
+						<th scope="col" class="text-center">TIME OUT MINUTE</th>
+						<th scope="col" class="text-center">ACTION</th>
 					</tr>
-				{/each}
-			</tbody>
-		</Table>
+				</thead>
+				<tbody>
+					{#each attendances as attendance}
+						<tr>
+							<td class="text-center fw-bold">{attendance.Date.Day}</td>
+							<td class="text-center fw-bold">
+								{#if attendance.Suspended != "NOTSUSPENDED" }
+									<Badge color="info">{attendance.Suspended}</Badge>
+								{/if}
+								<Badge color={badgeColor(attendance.State)}>{attendance.State}</Badge>
+							</td>
+							<td class="text-center">{attendance.TimeIn.Hour}</td>
+							<td class="text-center">{attendance.TimeIn.Minute}</td>
+							<td class="text-center">{attendance.TimeOut.Hour}</td>
+							<td class="text-center">{attendance.TimeOut.Minute}</td>
+							{#if attendance.State != "ABSENT" && attendance.State != "DAYOFF"}
+								<td>
+									<ButtonGroup size="sm">
+										<Button color="info" on:click={() => {
+											updateAttendanceModal.init(selectedEmployee, true, schedules?.Schedules, selectedSchoolYear as string, attendance);
+											updateAttendanceModalToggle();}}>EDIT</Button>
+										<Button color="danger" on:click={() => {
+											removeAttendanceModal.init(selectedEmployee, attendance.Date);
+											removeAttendanceModalToggle();
+										}}>REMOVE</Button>
+									</ButtonGroup>
+								</td>
+							{:else}
+								<td></td>
+							{/if}
+						</tr>
+					{/each}
+				</tbody>
+			</Table>
+		{/if}
 	</ModalBody>
 	<ModalFooter>
 		<Button color="success" on:click={() => {updateAttendanceModal.init(selectedEmployee, false, schedules?.Schedules, selectedSchoolYear as string, undefined); updateAttendanceModalToggle();}}>Add Attendance</Button>

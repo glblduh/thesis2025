@@ -81,28 +81,30 @@
 				<Button type="submit" color="info" on:click={toggleValidate}><Icon name="plus-lg" class="fw-bold"/></Button>
 			</div>
 		</Form>
-		<Table responsive striped>
-			<thead>
-				<tr>
-					<th scope="col">YEAR</th>
-					<th scope="col">MONTH</th>
-					<th scope="col">DAY</th>
-					<th scope="col">TYPE</th>
-					<th scope="col">REMOVE?</th>
-				</tr>
-				{#each suspensions as suspension }
+		{#if suspensions.length != 0}
+			<Table responsive striped>
+				<thead>
 					<tr>
-						<td>{suspension.Date.Year}</td>
-						<td>{suspension.Date.Month}</td>
-						<td>{suspension.Date.Day}</td>
-						<td>{suspension.Type}</td>
-						<td><Button color="danger" on:click={() => {
-							removeSuspensionModal.init(suspension.Date);
-							removeSuspensionModalToggle();
-						}}>REMOVE</Button></td>
+						<th scope="col">YEAR</th>
+						<th scope="col">MONTH</th>
+						<th scope="col">DAY</th>
+						<th scope="col">TYPE</th>
+						<th scope="col">REMOVE?</th>
 					</tr>
-				{/each}
-			</thead>
-		</Table>
+					{#each suspensions as suspension }
+						<tr>
+							<td>{suspension.Date.Year}</td>
+							<td>{suspension.Date.Month}</td>
+							<td>{suspension.Date.Day}</td>
+							<td>{suspension.Type}</td>
+							<td><Button color="danger" on:click={() => {
+								removeSuspensionModal.init(suspension.Date);
+								removeSuspensionModalToggle();
+							}}>REMOVE</Button></td>
+						</tr>
+					{/each}
+				</thead>
+			</Table>
+		{/if}
 	</ModalBody>
 </Modal>

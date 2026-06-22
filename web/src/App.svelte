@@ -129,31 +129,41 @@
 		<Table responsive striped>
 			<thead>
 				<tr>
-					<th scope="col">ACTION</th>
-					<th scope="col">ID NUMBER</th>
-					<th scope="col">TYPE</th>
-					<th scope="col">FIRST NAME</th>
-					<th scope="col">MIDDLE NAME</th>
-					<th scope="col">LAST NAME</th>
+					{#if employees.length == 0}
+						<th></th>
+					{:else}
+							<th scope="col">ACTION</th>
+							<th scope="col">ID NUMBER</th>
+							<th scope="col">TYPE</th>
+							<th scope="col">FIRST NAME</th>
+							<th scope="col">MIDDLE NAME</th>
+							<th scope="col">LAST NAME</th>
+					{/if}
 				</tr>
 			</thead>
 			<tbody>
-				{#each employees as employee}
+				{#if employees.length == 0}
 					<tr>
-						<td>
-							<ButtonGroup vertical size="sm">
-								<Button color="primary" on:click={() => {selectEmployee(employee.idNumber); employeeAttendancesModalToggle();}}>Attendances</Button>
-								<Button color="primary" on:click={() => {selectEmployee(employee.idNumber); employeeSchedulesModalToggle();}}>Schedules</Button>
-								<Button color="danger" on:click={() => {selectEmployee(employee.idNumber); removeEmployeeModalToggle();}}>Remove</Button>
-							</ButtonGroup>
-						</td>
-						<td>{employee.idNumber}</td>
-						<td>{employee.employeeType}</td>
-						<td>{employee.firstName}</td>
-						<td>{employee.middleName}</td>
-						<td>{employee.lastName}</td>
+						<td class="fw-bold text-center">No Employee Found</td>
 					</tr>
-				{/each}
+				{:else}
+					{#each employees as employee}
+						<tr>
+							<td>
+								<ButtonGroup vertical size="sm">
+									<Button color="primary" on:click={() => {selectEmployee(employee.idNumber); employeeAttendancesModalToggle();}}>Attendances</Button>
+									<Button color="primary" on:click={() => {selectEmployee(employee.idNumber); employeeSchedulesModalToggle();}}>Schedules</Button>
+									<Button color="danger" on:click={() => {selectEmployee(employee.idNumber); removeEmployeeModalToggle();}}>Remove</Button>
+								</ButtonGroup>
+							</td>
+							<td>{employee.idNumber}</td>
+							<td>{employee.employeeType}</td>
+							<td>{employee.firstName}</td>
+							<td>{employee.middleName}</td>
+							<td>{employee.lastName}</td>
+						</tr>
+					{/each}
+				{/if}
 			</tbody>
 		</Table>
 	</div>

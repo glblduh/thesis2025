@@ -78,36 +78,40 @@
 				{/each}
 			</Input>
 		</FormGroup>
-		<Table size="sm" striped>
-			<thead>
-				<tr>
-					<th scope="col" class="text-center">DAY</th>
-					<th scope="col" class="text-center">OFF?</th>
-					<th scope="col" class="text-center">START HOUR</th>
-					<th scope="col" class="text-center">START MINUTE</th>
-					<th scope="col" class="text-center">END HOUR</th>
-					<th scope="col" class="text-center">END MINUTE</th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each Object.entries(selectedSchedule) as [day, time]}
-					{#if day != "SchoolYear"}
-						<tr>
-							<td class="text-center fw-bold">{day.toUpperCase()}</td>
-							<td class="text-center"><Input disabled type="switch" bind:checked={(time as DayTimeRange).DayOff} /></td>
-							<td class="text-center">{(time as DayTimeRange).StartTimeHour}</td>
-							<td class="text-center">{(time as DayTimeRange).StartTimeMinute}</td>
-							<td class="text-center">{(time as DayTimeRange).EndTimeHour}</td>
-							<td class="text-center">{(time as DayTimeRange).EndTimeMinute}</td>
-						</tr>
-					{/if}
-				{/each}
-			</tbody>
-		</Table>
+		{#if selectedSchoolYear != undefined}
+			<Table size="sm" striped>
+				<thead>
+					<tr>
+						<th scope="col" class="text-center">DAY</th>
+						<th scope="col" class="text-center">OFF?</th>
+						<th scope="col" class="text-center">START HOUR</th>
+						<th scope="col" class="text-center">START MINUTE</th>
+						<th scope="col" class="text-center">END HOUR</th>
+						<th scope="col" class="text-center">END MINUTE</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each Object.entries(selectedSchedule) as [day, time]}
+						{#if day != "SchoolYear"}
+							<tr>
+								<td class="text-center fw-bold">{day.toUpperCase()}</td>
+								<td class="text-center"><Input disabled type="switch" bind:checked={(time as DayTimeRange).DayOff} /></td>
+								<td class="text-center">{(time as DayTimeRange).StartTimeHour}</td>
+								<td class="text-center">{(time as DayTimeRange).StartTimeMinute}</td>
+								<td class="text-center">{(time as DayTimeRange).EndTimeHour}</td>
+								<td class="text-center">{(time as DayTimeRange).EndTimeMinute}</td>
+							</tr>
+						{/if}
+					{/each}
+				</tbody>
+			</Table>
+		{/if}
 	</ModalBody>
 	<ModalFooter>
-		<Button color="danger" disabled={selectedSchoolYear == undefined} on:click={() => {removeScheduleModal.setSchoolYear(selectedSchoolYear as string); removeScheduleModalToggle();}}>Remove Schedule</Button>
-		<Button color="info" disabled={selectedSchoolYear == undefined} on:click={() => {addScheduleModal.setSchedule(getSelectedYearSchedule(selectedSchoolYear as string)); addScheduleModalToggle();}}>Edit Schedule</Button>
+		{#if selectedSchoolYear != undefined}
+			<Button color="danger" disabled={selectedSchoolYear == undefined} on:click={() => {removeScheduleModal.setSchoolYear(selectedSchoolYear as string); removeScheduleModalToggle();}}>Remove Schedule</Button>
+			<Button color="info" disabled={selectedSchoolYear == undefined} on:click={() => {addScheduleModal.setSchedule(getSelectedYearSchedule(selectedSchoolYear as string)); addScheduleModalToggle();}}>Edit Schedule</Button>
+		{/if}
 		<Button color="success" on:click={addScheduleModalToggle}>Add Schedule</Button>
 	</ModalFooter>
 </Modal>
