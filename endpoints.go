@@ -418,3 +418,52 @@ func apiGetAllSuspended(w http.ResponseWriter, r *http.Request) {
 
 	encodeRes(w, allSuspended)
 }
+
+func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
+	body := apiGetAllMonthAttendancesBody{}
+	res := apiGetAllMonthAttendancesRes{}
+
+	if decodeBody(w, r.Body, &body) != nil {
+		return
+	}
+
+	allEmployees, getAllEmployeersErr := getAllEmployees()
+	if getAllEmployeersErr != nil {
+		errorRes(w, getAllEmployeersErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	for facultyCount := 0; facultyCount < len(allEmployees.Faculty); facultyCount++ {
+		currentFaculty := allEmployees.Faculty[facultyCount]
+		res.Employees.Faculty = append(res.Employees.Faculty, currentFaculty)
+
+		currentFacultyAttendance, getMonthAttendancesErr := getMonthAttendances(strconv.Itoa(currentFaculty.IdNumber), body.SchoolYear, body.Date)
+		if getMonthAttendancesErr != nil {
+			errorRes(w, getMonthAttendancesErr.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		res.Attendances.Faculty = append(res.Attendances.Faculty, monthAttendances{
+			IdNumber: currentFaculty.IdNumber,
+			Attendances: currentFacultyAttendance,
+		})
+	}
+
+	for staffCount := 0; staffCount < len(allEmployees.Staff); staffCount++ {
+		currentStaff := allEmployees.Staff[staffCount]
+		res.Employees.Staff = append(res.Employees.Staff, currentStaff)
+
+		currentStaffAttendances, getMonthAttendancesErr := getMonthAttendances(strconv.Itoa(currentStaff.IdNumber), body.SchoolYear, body.Date)
+		if getMonthAttendancesErr != nil {
+			errorRes(w, getMonthAttendancesErr.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		res.Attendances.Staff = append(res.Attendances.Staff, monthAttendances{
+			IdNumber: currentStaff.IdNumber,
+			Attendances: currentStaffAttendances,
+		})
+	}
+
+	encodeRes(w, res)
+}

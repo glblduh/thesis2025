@@ -100,6 +100,16 @@ type (
 		Date dayDate
 		Type SuspensionType
 	}
+
+	monthAttendances struct {
+		IdNumber int
+		Attendances []attendance
+	}
+
+	allAttendances struct {
+		Faculty []monthAttendances
+		Staff []monthAttendances
+	}
 )
 
 type (
@@ -179,5 +189,17 @@ type (
 
 	apiRemoveSuspendedBodyRes struct {
 		Date dayDate
+	}
+
+	apiGetAllMonthAttendancesBody struct {
+		SchoolYear string
+		Date dayDate
+	}
+
+	apiGetAllMonthAttendancesRes struct {
+		SchoolYear string
+		Date dayDate
+		Employees allEmployees
+		Attendances allAttendances
 	}
 )
