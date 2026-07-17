@@ -1,6 +1,8 @@
 package main
 
 import (
+	"io"
+	"errors"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -10,7 +12,7 @@ import (
 
 func apiAddEmployee(w http.ResponseWriter, r *http.Request) {
 	body := apiAddEmployeeBodyRes{}
-	if decodeBody(w, r.Body, &body) != nil {
+	if decodeBody(w, r.Body, &body, false) != nil {
 		return
 	}
 
@@ -30,7 +32,7 @@ func apiAddEmployee(w http.ResponseWriter, r *http.Request) {
 
 func apiRemoveEmployee(w http.ResponseWriter, r *http.Request) {
 	body := apiRemoveEmployeeBodyRes{}
-	if decodeBody(w, r.Body, &body) != nil {
+	if decodeBody(w, r.Body, &body, false) != nil {
 		return
 	}
 
@@ -45,7 +47,7 @@ func apiRemoveEmployee(w http.ResponseWriter, r *http.Request) {
 
 func apiUpdateSchedule(w http.ResponseWriter, r *http.Request) {
 	body := apiUpdateScheduleBodyRes{}
-	if decodeBody(w, r.Body, &body) != nil {
+	if decodeBody(w, r.Body, &body, false) != nil {
 		return
 	}
 
@@ -143,7 +145,7 @@ func apiGetEmployee(w http.ResponseWriter, r *http.Request) {
 
 func apiUpdateAttendance(w http.ResponseWriter, r *http.Request) {
 	body := apiUpdateAttendanceBodyRes{}
-	if decodeBody(w, r.Body, &body) != nil {
+	if decodeBody(w, r.Body, &body, false) != nil {
 		return
 	}
 
@@ -290,7 +292,7 @@ func apiGetAllEmployees(w http.ResponseWriter, r *http.Request) {
 
 func apiRemoveSchedule(w http.ResponseWriter, r *http.Request) {
 	body := apiRemoveScheduleBodyRes{}
-	if decodeBody(w, r.Body, &body) != nil {
+	if decodeBody(w, r.Body, &body, false) != nil {
 		return
 	}
 
@@ -339,7 +341,7 @@ func apiGetAttendancesDates(w http.ResponseWriter, r*http.Request) {
 
 func apiRemoveAttendance(w http.ResponseWriter, r *http.Request) {
 	body := apiRemoveAttendanceBodyRes{}
-	if decodeBody(w, r.Body, &body) != nil {
+	if decodeBody(w, r.Body, &body, false) != nil {
 		return
 	}
 
@@ -381,7 +383,7 @@ func apiAttend(w http.ResponseWriter, r *http.Request) {
 
 func apiUpdateSuspended(w http.ResponseWriter, r *http.Request) {
 	body := apiAddSuspendedBodyRes{}
-	if decodeBody(w, r.Body, &body) != nil {
+	if decodeBody(w, r.Body, &body, false) != nil {
 		return
 	}
 
@@ -396,7 +398,7 @@ func apiUpdateSuspended(w http.ResponseWriter, r *http.Request) {
 
 func apiRemoveSuspended(w http.ResponseWriter, r *http.Request) {
 	body := apiRemoveSuspendedBodyRes{}
-	if decodeBody(w, r.Body, &body) != nil {
+	if decodeBody(w, r.Body, &body, false) != nil {
 		return
 	}
 
@@ -420,11 +422,40 @@ func apiGetAllSuspended(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
-	body := apiGetAllMonthAttendancesBody{}
+	httpVars := mux.Vars(r)
 	res := apiGetAllMonthAttendancesRes{}
 
-	if decodeBody(w, r.Body, &body) != nil {
+	schoolYear, httpVarUnescapeErr := url.QueryUnescape(httpVars["schoolYear"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	year, httpVarUnescapeErr := url.QueryUnescape(httpVars["year"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	yearInt, convertErr := strconv.Atoi(year)
+	if convertErr != nil {
+		errorRes(w, convertErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	month, httpVarUnescapeErr := url.QueryUnescape(httpVars["month"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	monthInt, convertErr := strconv.Atoi(month)
+	if convertErr != nil {
+		errorRes(w, convertErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	date := dayDate{
+		Year: yearInt,
+		Month: monthInt,
 	}
 
 	allEmployees, getAllEmployeersErr := getAllEmployees()
@@ -437,8 +468,8 @@ func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
 		currentFaculty := allEmployees.Faculty[facultyCount]
 		res.Employees.Faculty = append(res.Employees.Faculty, currentFaculty)
 
-		currentFacultyAttendance, getMonthAttendancesErr := getMonthAttendances(strconv.Itoa(currentFaculty.IdNumber), body.SchoolYear, body.Date)
-		if getMonthAttendancesErr != nil {
+		currentFacultyAttendance, getMonthAttendancesErr := getMonthAttendances(strconv.Itoa(currentFaculty.IdNumber), schoolYear, date)
+		if getMonthAttendancesErr != nil && !(errors.Is(getMonthAttendancesErr, ErrSchoolYearNotFound) || errors.Is(getMonthAttendancesErr, ErrYearNotFound) || errors.Is(getMonthAttendancesErr, ErrMonthNotFound)) {
 			errorRes(w, getMonthAttendancesErr.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -453,8 +484,8 @@ func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
 		currentStaff := allEmployees.Staff[staffCount]
 		res.Employees.Staff = append(res.Employees.Staff, currentStaff)
 
-		currentStaffAttendances, getMonthAttendancesErr := getMonthAttendances(strconv.Itoa(currentStaff.IdNumber), body.SchoolYear, body.Date)
-		if getMonthAttendancesErr != nil {
+		currentStaffAttendances, getMonthAttendancesErr := getMonthAttendances(strconv.Itoa(currentStaff.IdNumber), schoolYear, date)
+		if getMonthAttendancesErr != nil && !(errors.Is(getMonthAttendancesErr, ErrSchoolYearNotFound) || errors.Is(getMonthAttendancesErr, ErrYearNotFound) || errors.Is(getMonthAttendancesErr, ErrMonthNotFound)) {
 			errorRes(w, getMonthAttendancesErr.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -463,6 +494,26 @@ func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
 			IdNumber: currentStaff.IdNumber,
 			Attendances: currentStaffAttendances,
 		})
+	}
+
+	encodeRes(w, res)
+}
+
+func apiGetAllSchoolYears(w http.ResponseWriter, r *http.Request) {
+	body := apiGetAllSchoolYearsBody{}
+
+	decodeErr := decodeBody(w, r.Body, &body, true)
+	if decodeErr != nil && decodeErr == io.EOF {
+		body.Faculty = true
+		body.Staff = true
+	} else {
+		errorRes(w, "JSON Decoder error: " + decodeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	res, getAllSchoolYearsErr := getAllSchoolYears(body.Faculty, body.Staff)
+	if getAllSchoolYearsErr != nil {
+		errorRes(w, getAllSchoolYearsErr.Error(), http.StatusInternalServerError)
 	}
 
 	encodeRes(w, res)

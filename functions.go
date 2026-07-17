@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -16,7 +15,7 @@ func encodeRes(w http.ResponseWriter, v any) error {
 	w.Header().Add("Content-Type", "application/json")
 	err := json.NewEncoder(w).Encode(v)
 	if err != nil {
-		errorRes(w, "JSON Encoder error", http.StatusInternalServerError)
+		errorRes(w, "JSON Encoder error: " + err.Error(), http.StatusInternalServerError)
 	}
 	return err
 }
@@ -31,10 +30,10 @@ func errorRes(w http.ResponseWriter, errorResponse string, code int) {
 	}
 }
 
-func decodeBody(w http.ResponseWriter, body io.Reader, v any) error {
+func decodeBody(w http.ResponseWriter, body io.Reader, v any, noRes bool) error {
 	err := json.NewDecoder(body).Decode(v)
-	if err != nil {
-		errorRes(w, "JSON Encoder error", http.StatusInternalServerError)
+	if err != nil && !noRes {
+		errorRes(w, "JSON Decoder error: " + err.Error(), http.StatusInternalServerError)
 	}
 	return err
 }
@@ -100,7 +99,7 @@ func checkIfFaculty(employeeType string) (bool, error) {
 	case "faculty":
 		isFaculty = true
 	default:
-		return false, errors.New("not a valid employee type")
+		return false, ErrInvalidEmployeeType
 	}
 	return isFaculty, nil
 }
@@ -137,7 +136,7 @@ func checkIfWorkingDay(scheduleBucket *bbolt.Bucket, schoolYear schoolYearRange,
 	schoolYearString := createSchoolYearString(schoolYear.StartYear, schoolYear.EndYear)
 	schoolYearBucket := scheduleBucket.Bucket([]byte(schoolYearString))
 	if schoolYearBucket == nil {
-		return false, errors.New("school year not found")
+		return false, ErrSchoolYearNotFound
 	}
 	dayName := time.Date(date.Year, time.Month(date.Month), date.Day, 0, 0, 0, 0, time.UTC).Weekday().String()
 	dayBucket := scheduleBucket.Bucket([]byte(dayName))
@@ -274,4 +273,18 @@ func getDateSuspension(suspendedBucket *bbolt.Bucket, date dayDate) SuspensionTy
 	}
 
 	return suspensionType
+}
+
+func getSchoolYearIteration(typeBucket *bbolt.Bucket) []string {
+	schoolYears := []string{}
+
+	bucketCursor := typeBucket.Cursor()
+	for currentKey, _ := bucketCursor.First(); currentKey != nil; currentKey, _ = bucketCursor.Next() {
+		currentSchedulesBucketCursor := typeBucket.Bucket(currentKey).Bucket([]byte("Schedule")).Cursor()
+		for currentSchoolYear, _ := currentSchedulesBucketCursor.First(); currentSchoolYear != nil; currentSchoolYear, _ = currentSchedulesBucketCursor.Next() {
+			schoolYears = append(schoolYears, string(currentSchoolYear))
+		}
+	}
+
+	return schoolYears
 }

@@ -4,12 +4,35 @@ import (
 	"log"
 	"os"
 	"time"
+	"errors"
 )
 
 var (
 	Info  = log.New(os.Stderr, "["+time.Now().Format("2006/01/02 15:04:05")+"] [INFO] ", log.Lmsgprefix)
 	Warn  = log.New(os.Stderr, "["+time.Now().Format("2006/01/02 15:04:05")+"] [WARN] ", log.Lmsgprefix)
 	Error = log.New(os.Stderr, "["+time.Now().Format("2006/01/02 15:04:05")+"] [ERROR] ", log.Lmsgprefix)
+)
+
+var (
+	ErrYearNoSchoolYear = errors.New("current year does not belong to any registered school year")
+	ErrDayOff = errors.New("day off")
+	ErrDayComplete = errors.New("attendance for today is already completed")
+
+	ErrIdNumberNotFound = errors.New("id number not found")
+	ErrInvalidEmployeeType = errors.New("not a valid employee type")
+
+	ErrSchoolYearNotFound = errors.New("school year not found")
+	ErrYearNotFound = errors.New("year not found")
+	ErrMonthNotFound = errors.New("month not found")
+	ErrDayNotFound = errors.New("day not found")
+
+	ErrInvalidDate = errors.New("invalid date")
+	ErrInvalidMonth = errors.New("invalid month")
+	ErrInvalidDay = errors.New("invalid day")
+
+	ErrSuspendedBucketNotFound = errors.New("suspended bucket not found")
+	ErrYearBucketNotFound = errors.New("year bucket not found")
+	ErrMonthBucketNotFound = errors.New("month bucket not found")
 )
 
 type AttendanceState string
@@ -191,15 +214,15 @@ type (
 		Date dayDate
 	}
 
-	apiGetAllMonthAttendancesBody struct {
-		SchoolYear string
-		Date dayDate
-	}
-
 	apiGetAllMonthAttendancesRes struct {
 		SchoolYear string
 		Date dayDate
 		Employees allEmployees
 		Attendances allAttendances
+	}
+
+	apiGetAllSchoolYearsBody struct {
+		Faculty bool
+		Staff bool
 	}
 )

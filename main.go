@@ -44,7 +44,8 @@ func main() {
 	apiGetRouter.HandleFunc("/getallattendancesyears/{idNumber}", apiGetAttendancesDates)
 	apiGetRouter.HandleFunc("/getallattendancesmonths/{idNumber}/{year}", apiGetAttendancesDates)
 	apiGetRouter.HandleFunc("/getallsuspended", apiGetAllSuspended)
-	apiGetRouter.HandleFunc("/getallmonthattendances", apiGetAllMonthAttendances)
+	apiGetRouter.HandleFunc("/getallmonthattendances/{schoolYear}/{year}/{month}", apiGetAllMonthAttendances)
+	apiGetRouter.HandleFunc("/getallschoolyears", apiGetAllSchoolYears)
 
 	svelteFS, fsErr := fs.Sub(svelteFiles, "web/dist")
 	if fsErr != nil {
