@@ -92,6 +92,10 @@
 				{/each}
 			</tr>
 		</thead>
+		<tbody>
+			{#each  as }
+			{/each}
+		</tbody>
 		</Table>
 	</ModalBody>
 </Modal>

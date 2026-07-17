@@ -458,6 +458,9 @@ func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
 		Month: monthInt,
 	}
 
+	res.SchoolYear = schoolYear
+	res.Date = date
+
 	allEmployees, getAllEmployeersErr := getAllEmployees()
 	if getAllEmployeersErr != nil {
 		errorRes(w, getAllEmployeersErr.Error(), http.StatusInternalServerError)
@@ -466,7 +469,6 @@ func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
 
 	for facultyCount := 0; facultyCount < len(allEmployees.Faculty); facultyCount++ {
 		currentFaculty := allEmployees.Faculty[facultyCount]
-		res.Employees.Faculty = append(res.Employees.Faculty, currentFaculty)
 
 		currentFacultyAttendance, getMonthAttendancesErr := getMonthAttendances(strconv.Itoa(currentFaculty.IdNumber), schoolYear, date)
 		if getMonthAttendancesErr != nil && !(errors.Is(getMonthAttendancesErr, ErrSchoolYearNotFound) || errors.Is(getMonthAttendancesErr, ErrYearNotFound) || errors.Is(getMonthAttendancesErr, ErrMonthNotFound)) {
@@ -475,14 +477,13 @@ func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
 		}
 
 		res.Attendances.Faculty = append(res.Attendances.Faculty, monthAttendances{
-			IdNumber: currentFaculty.IdNumber,
+			EmployeeInfo: currentFaculty,
 			Attendances: currentFacultyAttendance,
 		})
 	}
 
 	for staffCount := 0; staffCount < len(allEmployees.Staff); staffCount++ {
 		currentStaff := allEmployees.Staff[staffCount]
-		res.Employees.Staff = append(res.Employees.Staff, currentStaff)
 
 		currentStaffAttendances, getMonthAttendancesErr := getMonthAttendances(strconv.Itoa(currentStaff.IdNumber), schoolYear, date)
 		if getMonthAttendancesErr != nil && !(errors.Is(getMonthAttendancesErr, ErrSchoolYearNotFound) || errors.Is(getMonthAttendancesErr, ErrYearNotFound) || errors.Is(getMonthAttendancesErr, ErrMonthNotFound)) {
@@ -491,7 +492,7 @@ func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
 		}
 
 		res.Attendances.Staff = append(res.Attendances.Staff, monthAttendances{
-			IdNumber: currentStaff.IdNumber,
+			EmployeeInfo: currentStaff,
 			Attendances: currentStaffAttendances,
 		})
 	}

@@ -125,7 +125,7 @@ type (
 	}
 
 	monthAttendances struct {
-		IdNumber int
+		EmployeeInfo employee
 		Attendances []attendance
 	}
 
@@ -217,7 +217,6 @@ type (
 	apiGetAllMonthAttendancesRes struct {
 		SchoolYear string
 		Date dayDate
-		Employees allEmployees
 		Attendances allAttendances
 	}
 
