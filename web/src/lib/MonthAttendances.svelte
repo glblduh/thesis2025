@@ -3,20 +3,20 @@
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
 	import 'bootstrap-icons/font/bootstrap-icons.css';
 	import { Button, Table, Modal, ModalBody, FormGroup, Input, ModalFooter, InputGroup, Badge, ButtonGroup } from "@sveltestrap/sveltestrap";
-	import type { AttendancesDates, DayDate, Attendance, ApiRes } from "./utils";
-    import { monthsName } from "./utils";
+	import type { DayDate, MonthAttendances } from "./utils";
+    import { monthsName, badgeColor } from "./utils";
 
 	let { isModalOpen, modalToggle } = $props();
 	let selectedDate = $state({}) as DayDate;
 	let selectedSchoolYear: string | undefined = $state();
 	let schoolYears = $state([]) as string[];
-	let attendances = $state([]) as Attendance[];
+	let attendances = $state({}) as MonthAttendances;
 
 	function clearVars() {
 		selectedDate = {} as DayDate;
 		selectedSchoolYear = undefined;
 		schoolYears = [];
-		attendances = {} as Attendance[];
+		attendances = {} as MonthAttendances;
 		modalToggle();
 	}
 
@@ -31,32 +31,11 @@
 	async function getAttendances() {
 		fetch("/api/getallmonthattendances/" + selectedSchoolYear + "/" + selectedDate.Year + "/" + selectedDate.Month).then((res) => {
 			res.json().then((resJson) => {
-				attendances = resJson.Attendances
+				attendances = resJson
 			})
 		})
 	}
 
-	function badgeColor(state: string): string {
-		let color = "primary";
-		switch(state) {
-			case "DAYOFF":
-				color = "secondary";
-				break;
-			case "LEAVE":
-				color = "info";
-				break;
-			case "ATTENDED":
-				color = "success";
-				break;
-			case "NOOUT":
-				color = "warning";
-				break;
-			case "ABSENT":
-				color = "danger";
-				break;
-		}
-		return color;
-	}
 </script>
 
 <Modal isOpen={isModalOpen} toggle={clearVars} header="View Attendances" size="lg">
@@ -83,19 +62,55 @@
 				</Input>
 			</FormGroup>
 		</InputGroup>
-		<Table striped size="sm" responsive>
-		<thead>
-			<tr>
-				<th scope="col" class="text-center">NAME</th>
-				{#each {length: new Date(selectedDate.Year, selectedDate.Month, 0).getDate()}, day}
-					<th scope="col" class="text-center">{day+1}</th>
+		<Table striped size="lg" responsive>
+			<thead>
+				<tr>
+					<th scope="col" class="text-center">NAME</th>
+					{#each {length: new Date(selectedDate.Year, selectedDate.Month, 0).getDate()}, day}
+						<th scope="col" class="text-center">{day+1}</th>
+					{/each}
+				</tr>
+			</thead>
+			<tbody>
+				{#each attendances.Attendances?.Faculty as attendance}
+					{#if attendance.Attendances.length != 0}
+						<tr>
+							<td>{attendance.EmployeeInfo.LastName + ", " + attendance.EmployeeInfo.FirstName}</td>
+							{#each attendance.Attendances as dayAttendance}
+								<td>
+									<Badge color={badgeColor(dayAttendance.State)}>{dayAttendance.State}</Badge>
+									{#if dayAttendance.State == "ATTENDED"}
+										<Badge color="info">IN: {dayAttendance.TimeIn.Hour + ":" + dayAttendance.TimeIn.Minute}</Badge>
+										<Badge color="info">OUT: {dayAttendance.TimeOut.Hour + ":" + dayAttendance.TimeOut.Minute}</Badge>
+									{/if}
+									{#if dayAttendance.State == "NOOUT"}
+										<Badge color="info">IN: {dayAttendance.TimeIn.Hour + ":" + dayAttendance.TimeIn.Minute}</Badge>
+									{/if}
+								</td>
+							{/each}
+						</tr>
+					{/if}
 				{/each}
-			</tr>
-		</thead>
-		<tbody>
-			{#each  as }
-			{/each}
-		</tbody>
+				{#each attendances.Attendances?.Staff as attendance}
+					{#if attendance.Attendances.length != 0}
+						<tr>
+							<td>{attendance.EmployeeInfo.LastName + ", " + attendance.EmployeeInfo.FirstName}</td>
+							{#each attendance.Attendances as dayAttendance}
+								<td>
+									<Badge color={badgeColor(dayAttendance.State)}>{dayAttendance.State}</Badge>
+									{#if dayAttendance.State == "ATTENDED"}
+										<Badge color="info">IN: {dayAttendance.TimeIn.Hour + ":" + dayAttendance.TimeIn.Minute}</Badge>
+										<Badge color="info">OUT: {dayAttendance.TimeOut.Hour + ":" + dayAttendance.TimeOut.Minute}</Badge>
+									{/if}
+									{#if dayAttendance.State == "NOOUT"}
+										<Badge color="info">IN: {dayAttendance.TimeIn.Hour + ":" + dayAttendance.TimeIn.Minute}</Badge>
+									{/if}
+								</td>
+							{/each}
+						</tr>
+					{/if}
+				{/each}
+			</tbody>
 		</Table>
 	</ModalBody>
 </Modal>

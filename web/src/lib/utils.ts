@@ -64,8 +64,55 @@ export interface SuspendedDay {
 	Type: string
 }
 
+export interface EmployeeInfo {
+	IdNumber: number
+	IsFaculty: boolean
+	EmployeeType: string
+	FirstName: string
+	MiddleName: string
+	LastName: string
+}
+
+export interface InfoAttendance {
+	EmployeeInfo: EmployeeInfo
+	Attendances: Attendance[]
+}
+
+export interface AllAttendances {
+	Faculty: InfoAttendance[]
+	Staff: InfoAttendance[]
+}
+
+export interface MonthAttendances {
+	SchoolYear: string
+	Date: DayDate
+	Attendances: AllAttendances
+}
+
 export async function getSchedules(idNumber: number): Promise<ApiRes> {
 	let res = await fetch("/api/getallschedule/" + idNumber)
 	let jsonRes: ApiRes = await res.json();
 	return jsonRes;
+}
+
+export function badgeColor(state: string): string {
+	let color = "primary";
+	switch (state) {
+		case "DAYOFF":
+			color = "secondary";
+			break;
+		case "LEAVE":
+			color = "info";
+			break;
+		case "ATTENDED":
+			color = "success";
+			break;
+		case "NOOUT":
+			color = "warning";
+			break;
+		case "ABSENT":
+			color = "danger";
+			break;
+	}
+	return color;
 }

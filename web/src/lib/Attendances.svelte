@@ -4,7 +4,7 @@
 	import 'bootstrap-icons/font/bootstrap-icons.css';
 	import { Button, Table, Modal, ModalBody, FormGroup, Input, ModalFooter, InputGroup, Badge, ButtonGroup } from "@sveltestrap/sveltestrap";
 	import type { AttendancesDates, DayDate, Attendance, ApiRes } from "./utils";
-    import { getSchedules, monthsName } from "./utils";
+    import { getSchedules, monthsName, badgeColor } from "./utils";
     import UpdateAttendance from "./UpdateAttendance.svelte";
     import RemoveAttendance from "./RemoveAttendance.svelte";
 
@@ -52,28 +52,6 @@
 				attendances = resJson.Attendances
 			})
 		})
-	}
-
-	function badgeColor(state: string): string {
-		let color = "primary";
-		switch(state) {
-			case "DAYOFF":
-				color = "secondary";
-				break;
-			case "LEAVE":
-				color = "info";
-				break;
-			case "ATTENDED":
-				color = "success";
-				break;
-			case "NOOUT":
-				color = "warning";
-				break;
-			case "ABSENT":
-				color = "danger";
-				break;
-		}
-		return color;
 	}
 
 	export async function init(idNumber: number) {
