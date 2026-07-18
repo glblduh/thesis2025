@@ -368,7 +368,7 @@ func apiAttend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	attendState, attendTime, checkAttendErr := checkAndAttend(idNumber)
+	attend, checkAttendErr := checkAndAttend(idNumber)
 	if checkAttendErr != nil {
 		errorRes(w, checkAttendErr.Error(), http.StatusInternalServerError)
 		return
@@ -376,8 +376,10 @@ func apiAttend(w http.ResponseWriter, r *http.Request) {
 
 	encodeRes(w, apiAttendRes{
 		IdNumber: idNumberInt,
-		State: attendState,
-		Time: attendTime,
+		State: attend.State,
+		SchoolYear: attend.SchoolYear,
+		Date: attend.Date,
+		Time: attend.Time,
 	})
 }
 

@@ -133,6 +133,13 @@ type (
 		Faculty []monthAttendances
 		Staff []monthAttendances
 	}
+
+	attend struct {
+		State AttendState
+		SchoolYear string
+		Date dayDate
+		Time attendanceTime
+	}
 )
 
 type (
@@ -202,6 +209,8 @@ type (
 	apiAttendRes struct {
 		IdNumber int
 		State    AttendState
+		SchoolYear string
+		Date dayDate
 		Time     attendanceTime
 	}
 

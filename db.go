@@ -706,22 +706,21 @@ func removeAttendance(idNumber string, date dayDate) error {
 	})
 }
 
-func checkAndAttend(idNumber string) (AttendState, attendanceTime, error) {
-	attendState := AttendState("");
-	attendTime := attendanceTime{}
+func checkAndAttend(idNumber string) (attend, error) {
+	attend := attend{}
 
 	employeeStruct, verifyErr := getEmployee(idNumber)
 	if verifyErr != nil {
-		return attendState, attendTime, verifyErr
+		return attend, verifyErr
 	}
 
 	db, dbErr := openDB()
 	if dbErr != nil {
-		return attendState, attendTime, dbErr
+		return attend, dbErr
 	}
 	defer db.Close()
 
-	dbUpdate := db.Update(func(tx *bbolt.Tx) error {
+	return attend, db.Update(func(tx *bbolt.Tx) error {
 		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Attendance"))
 		scheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule"))
 
@@ -734,9 +733,10 @@ func checkAndAttend(idNumber string) (AttendState, attendanceTime, error) {
 		}
 
 		currentTime := time.Now()
-		currentYear := currentTime.Year()
-		currentMonth := int(currentTime.Month())
-		currentDay := currentTime.Day()
+		attend.SchoolYear = currentSchoolYearString
+		attend.Date.Year = currentTime.Year()
+		attend.Date.Month = int(currentTime.Month())
+		attend.Date.Day = currentTime.Day()
 
 		currentDayScheduleStruct := dayTimeRange{}
 		currentDayScheduleByte := scheduleBucket.Bucket([]byte(currentSchoolYearString)).Get([]byte(currentTime.Weekday().String()))
@@ -749,17 +749,17 @@ func checkAndAttend(idNumber string) (AttendState, attendanceTime, error) {
 			return ErrDayOff
 		}
 
-		yearBucket, yearBucketErr := attendanceBucket.CreateBucketIfNotExists([]byte(strconv.Itoa(currentYear)))
+		yearBucket, yearBucketErr := attendanceBucket.CreateBucketIfNotExists([]byte(strconv.Itoa(attend.Date.Year)))
 		if yearBucketErr != nil {
 			return yearBucketErr
 		}
 
-		monthBucket, monthBucketErr := yearBucket.CreateBucketIfNotExists([]byte(strconv.Itoa(currentMonth)))
+		monthBucket, monthBucketErr := yearBucket.CreateBucketIfNotExists([]byte(strconv.Itoa(attend.Date.Month)))
 		if monthBucketErr != nil {
 			return monthBucketErr
 		}
 
-		dayBucket, dayBucketErr := monthBucket.CreateBucketIfNotExists([]byte(strconv.Itoa(currentDay)))
+		dayBucket, dayBucketErr := monthBucket.CreateBucketIfNotExists([]byte(strconv.Itoa(attend.Date.Day)))
 		if dayBucketErr != nil {
 			return dayBucketErr
 		}
@@ -783,8 +783,8 @@ func checkAndAttend(idNumber string) (AttendState, attendanceTime, error) {
 			if timeOutPutErr != nil {
 				return timeOutPutErr
 			}
-			attendState = TIMEOUT
-			attendTime = currentTimeStruct
+			attend.State = TIMEOUT
+			attend.Time = currentTimeStruct
 			return nil
 		}
 
@@ -793,15 +793,10 @@ func checkAndAttend(idNumber string) (AttendState, attendanceTime, error) {
 			return timeInPutErr
 		}
 
-		attendState = TIMEIN
-		attendTime = currentTimeStruct
+		attend.State = TIMEIN
+		attend.Time = currentTimeStruct
 		return nil
 	})
-	if dbUpdate != nil {
-		return attendState, attendTime, dbUpdate
-	}
-
-	return attendState, attendTime, nil
 }
 
 func updateSuspended(date dayDate, suspensionType SuspensionType) error {
