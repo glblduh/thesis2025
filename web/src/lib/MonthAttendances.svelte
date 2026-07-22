@@ -45,7 +45,7 @@
 	}
 </script>
 
-<Modal isOpen={isModalOpen} toggle={clearVars} header="View Attendances" size="lg">
+<Modal isOpen={isModalOpen} toggle={clearVars} header="View All Attendances" size="lg">
 	<ModalBody>
 		<InputGroup>
 			<FormGroup floating label="School Year">
