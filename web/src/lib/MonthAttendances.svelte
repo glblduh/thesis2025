@@ -5,20 +5,31 @@
 	import { Button, Table, Modal, ModalBody, FormGroup, Input, ModalFooter, InputGroup, Badge, ButtonGroup } from "@sveltestrap/sveltestrap";
 	import type { DayDate, MonthAttendances } from "./utils";
     import { monthsName, badgeColor } from "./utils";
+    import { untrack } from "svelte";
 
 	let { isModalOpen, modalToggle } = $props();
 	let selectedDate = $state({}) as DayDate;
+
 	let selectedSchoolYear: string | undefined = $state();
+	$effect(() => {
+		if (selectedSchoolYear == undefined) {
+			return
+		}
+
+		selectedDate.Year = untrack(() => years[0]);
+		untrack(() => getAttendances());
+	});
+
 	let schoolYears = $state([]) as string[];
 	let attendances = $state({}) as MonthAttendances;
-	let showHeader = $state(false);
+	let years = $state([]) as number[];
 
 	function clearVars() {
 		selectedDate = {} as DayDate;
 		selectedSchoolYear = undefined;
 		schoolYears = [];
 		attendances = {} as MonthAttendances;
-		showHeader = false;
+		years = [];
 		modalToggle();
 	}
 
@@ -31,6 +42,11 @@
 	}
 
 	async function getAttendances() {
+
+		if (selectedSchoolYear == undefined || selectedDate.Year == undefined || selectedDate.Month == undefined) {
+			return
+		}
+
 		fetch("/api/getallmonthattendances/" + selectedSchoolYear + "/" + selectedDate.Year + "/" + selectedDate.Month).then((res) => {
 			res.json().then((resJson) => {
 				attendances = resJson
@@ -38,10 +54,9 @@
 		})
 	}
 
-	function checkShowHeader() {
-		if (!showHeader) {
-			showHeader = true;
-		}
+	function getYears() {
+		let splitted = selectedSchoolYear?.split("-") as string[];
+		years = [Number(splitted[0]), Number(splitted[1])];
 	}
 </script>
 
@@ -49,16 +64,17 @@
 	<ModalBody>
 		<InputGroup>
 			<FormGroup floating label="School Year">
-				<Input type="select" bind:value={selectedSchoolYear}>
+				<Input type="select" bind:value={selectedSchoolYear} on:change={getYears}>
 					{#each schoolYears as schoolYear}
 						<option>{schoolYear}</option>
 					{/each}
 				</Input>
 			</FormGroup>
 			<FormGroup floating label="Year">
-				<Input type="select" disabled={selectedSchoolYear==undefined} bind:value={selectedDate.Year}>
-						<option>{selectedSchoolYear?.split("-")[0]}</option>
-						<option>{selectedSchoolYear?.split("-")[1]}</option>
+				<Input type="select" disabled={selectedSchoolYear==undefined} bind:value={selectedDate.Year} on:change={getAttendances}>
+					{#each years as year}
+						<option>{year}</option>
+					{/each}
 				</Input>
 			</FormGroup>
 			<FormGroup floating label="Month">

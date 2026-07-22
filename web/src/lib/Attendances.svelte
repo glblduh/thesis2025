@@ -7,6 +7,7 @@
     import { getSchedules, monthsName, badgeColor } from "./utils";
     import UpdateAttendance from "./UpdateAttendance.svelte";
     import RemoveAttendance from "./RemoveAttendance.svelte";
+    import { untrack } from "svelte";
 
 	let { isModalOpen, modalToggle } = $props();
 	let selectedEmployee: number = 0;
@@ -14,7 +15,16 @@
 	let dates = $state({}) as AttendancesDates;
 	let attendances = $state([]) as Attendance[];
 	let schedules = $state({}) as ApiRes;
+
 	let selectedSchoolYear: string | undefined = $state();
+	$effect(() => {
+		if (selectedSchoolYear == undefined) {
+			return
+		}
+
+		selectedDate.Year = untrack(() => dates.Years[0]);
+		untrack(() => getAttendances());
+	});
 
 	function clearVars() {
 		selectedEmployee = 0;
@@ -33,8 +43,8 @@
 	}
 
 	function getYears() {
-		let splittedSchoolYear = selectedSchoolYear?.split("-");
-		dates.Years = [(Number((splittedSchoolYear as string[])[0])), (Number((splittedSchoolYear as string[])[1]))];
+		let splitted = selectedSchoolYear?.split("-") as string[];
+		dates.Years = [Number(splitted[0]), Number(splitted[1])];
 	}
 
 	async function getMonths() {
@@ -47,6 +57,10 @@
 	}
 
 	async function getAttendances() {
+		if (selectedSchoolYear == undefined || selectedDate.Year == undefined || selectedDate.Month == undefined) {
+			return
+		}
+
 		fetch("/api/getmonthattendances/" + selectedEmployee + "/" + selectedSchoolYear + "/" + selectedDate.Year + "/" + selectedDate.Month).then((res) => {
 			res.json().then((resJson) => {
 				attendances = resJson.Attendances
@@ -88,7 +102,7 @@
 		</FormGroup>
 		<InputGroup>
 			<FormGroup floating label="Year">
-				<Input type="select" disabled={selectedSchoolYear==undefined} bind:value={selectedDate.Year} on:change={getMonths}>
+				<Input type="select" disabled={selectedSchoolYear==undefined} bind:value={selectedDate.Year} on:change={() => {getMonths(); getAttendances();}}>
 					{#each dates.Years as year}
 						<option>{year}</option>
 					{/each}
