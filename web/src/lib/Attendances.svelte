@@ -77,7 +77,7 @@
 <UpdateAttendance bind:this={updateAttendanceModal} isModalOpen={updateAttendanceModalState} modalToggle={updateAttendanceModalToggle} />
 <RemoveAttendance bind:this={removeAttendanceModal} isModalOpen={removeAttendanceModalState} modalToggle={removeAttendanceModalToggle} />
 
-<Modal isOpen={isModalOpen} toggle={clearVars} header="View Attendances" size="lg">
+<Modal isOpen={isModalOpen} toggle={clearVars} header="View All Attendances" size="lg">
 	<ModalBody>
 		<FormGroup floating label="School Year">
 			<Input type="select" bind:value={selectedSchoolYear} on:change={getYears}>

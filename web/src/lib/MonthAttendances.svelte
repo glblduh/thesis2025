@@ -11,12 +11,14 @@
 	let selectedSchoolYear: string | undefined = $state();
 	let schoolYears = $state([]) as string[];
 	let attendances = $state({}) as MonthAttendances;
+	let showHeader = $state(false);
 
 	function clearVars() {
 		selectedDate = {} as DayDate;
 		selectedSchoolYear = undefined;
 		schoolYears = [];
 		attendances = {} as MonthAttendances;
+		showHeader = false;
 		modalToggle();
 	}
 
@@ -36,6 +38,11 @@
 		})
 	}
 
+	function checkShowHeader() {
+		if (!showHeader) {
+			showHeader = true;
+		}
+	}
 </script>
 
 <Modal isOpen={isModalOpen} toggle={clearVars} header="View Attendances" size="lg">
@@ -62,19 +69,21 @@
 				</Input>
 			</FormGroup>
 		</InputGroup>
-		<Table striped size="lg" responsive>
+		<Table striped size="sm" responsive>
 			<thead>
-				<tr>
-					<th scope="col" class="text-center">NAME</th>
-					{#each {length: new Date(selectedDate.Year, selectedDate.Month, 0).getDate()}, day}
-						<th scope="col" class="text-center">{day+1}</th>
-					{/each}
-				</tr>
+				{#if attendances.AttendancesEmpty != undefined && !attendances.AttendancesEmpty}
+					<tr>
+						<th scope="col" class="text-center">NAME</th>
+						{#each {length: new Date(selectedDate.Year, selectedDate.Month, 0).getDate()}, day}
+							<th scope="col" class="text-center">{day+1}</th>
+						{/each}
+					</tr>
+				{/if}
 			</thead>
 			<tbody>
 				{#each attendances.Attendances?.Faculty as attendance}
-					{#if attendance.Attendances.length != 0}
-						<tr>
+					{#if attendance.Attendances?.length != 0}
+						<tr class="table-primary">
 							<td>{attendance.EmployeeInfo.LastName + ", " + attendance.EmployeeInfo.FirstName}</td>
 							{#each attendance.Attendances as dayAttendance}
 								<td>
@@ -92,8 +101,8 @@
 					{/if}
 				{/each}
 				{#each attendances.Attendances?.Staff as attendance}
-					{#if attendance.Attendances.length != 0}
-						<tr>
+					{#if attendance.Attendances?.length != 0}
+						<tr class="table-secondary">
 							<td>{attendance.EmployeeInfo.LastName + ", " + attendance.EmployeeInfo.FirstName}</td>
 							{#each attendance.Attendances as dayAttendance}
 								<td>

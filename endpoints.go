@@ -462,6 +462,7 @@ func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
 
 	res.SchoolYear = schoolYear
 	res.Date = date
+	res.AttendancesEmpty = true
 
 	allEmployees, getAllEmployeersErr := getAllEmployees()
 	if getAllEmployeersErr != nil {
@@ -472,15 +473,19 @@ func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
 	for facultyCount := 0; facultyCount < len(allEmployees.Faculty); facultyCount++ {
 		currentFaculty := allEmployees.Faculty[facultyCount]
 
-		currentFacultyAttendance, getMonthAttendancesErr := getMonthAttendances(strconv.Itoa(currentFaculty.IdNumber), schoolYear, date)
+		currentFacultyAttendances, getMonthAttendancesErr := getMonthAttendances(strconv.Itoa(currentFaculty.IdNumber), schoolYear, date)
 		if getMonthAttendancesErr != nil && !(errors.Is(getMonthAttendancesErr, ErrSchoolYearNotFound) || errors.Is(getMonthAttendancesErr, ErrYearNotFound) || errors.Is(getMonthAttendancesErr, ErrMonthNotFound)) {
 			errorRes(w, getMonthAttendancesErr.Error(), http.StatusInternalServerError)
 			return
 		}
 
+		if res.AttendancesEmpty && len(currentFacultyAttendances) != 0 {
+			res.AttendancesEmpty = false
+		}
+
 		res.Attendances.Faculty = append(res.Attendances.Faculty, monthAttendances{
 			EmployeeInfo: currentFaculty,
-			Attendances: currentFacultyAttendance,
+			Attendances: currentFacultyAttendances,
 		})
 	}
 
@@ -491,6 +496,10 @@ func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
 		if getMonthAttendancesErr != nil && !(errors.Is(getMonthAttendancesErr, ErrSchoolYearNotFound) || errors.Is(getMonthAttendancesErr, ErrYearNotFound) || errors.Is(getMonthAttendancesErr, ErrMonthNotFound)) {
 			errorRes(w, getMonthAttendancesErr.Error(), http.StatusInternalServerError)
 			return
+		}
+
+		if res.AttendancesEmpty && len(currentStaffAttendances) != 0 {
+			res.AttendancesEmpty = false
 		}
 
 		res.Attendances.Staff = append(res.Attendances.Staff, monthAttendances{

@@ -447,7 +447,7 @@ func getMonthAttendances(idNumber string, schoolYearString string, date dayDate)
 	}
 	defer db.Close()
 
-	dbViewErr := db.View(func(tx *bbolt.Tx) error {
+	return monthAttendances, db.View(func(tx *bbolt.Tx) error {
 		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Attendance"))
 		suspendedBucket := tx.Bucket([]byte("Suspended"))
 
@@ -493,11 +493,6 @@ func getMonthAttendances(idNumber string, schoolYearString string, date dayDate)
 
 		return nil
 	})
-	if dbViewErr != nil {
-		return monthAttendances, dbViewErr
-	}
-
-	return monthAttendances, nil
 }
 
 func getAllEmployees() (allEmployees, error) {

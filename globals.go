@@ -226,6 +226,7 @@ type (
 	apiGetAllMonthAttendancesRes struct {
 		SchoolYear string
 		Date dayDate
+		AttendancesEmpty bool
 		Attendances allAttendances
 	}
 

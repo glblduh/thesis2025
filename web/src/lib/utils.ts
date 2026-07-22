@@ -86,6 +86,7 @@ export interface AllAttendances {
 export interface MonthAttendances {
 	SchoolYear: string
 	Date: DayDate
+	AttendancesEmpty: boolean
 	Attendances: AllAttendances
 }
 
