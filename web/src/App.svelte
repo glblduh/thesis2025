@@ -2,7 +2,7 @@
 	import "bootstrap/dist/css/bootstrap.min.css";
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
 	import 'bootstrap-icons/font/bootstrap-icons.css';
-	import { Button, ButtonGroup, Table, Navbar, NavbarBrand, Icon } from "@sveltestrap/sveltestrap";
+	import { Button, ButtonGroup, Table, Navbar, NavbarBrand, Icon, Input } from "@sveltestrap/sveltestrap";
 	import { onMount } from "svelte";
 	import AddEmployee from "./lib/AddEmployee.svelte";
 	import RemoveEmployee from "./lib/RemoveEmployee.svelte";
@@ -12,8 +12,15 @@
     import AddSuspension from "./lib/AddSuspension.svelte";
     import MonthAttendances from "./lib/MonthAttendances.svelte";
 
-	let employees: Employee[] = [];
-	let selectedEmployee: number = 0;
+	let employees: Employee[] = $state([]);
+	let selectedEmployee: number = $state(0);
+	let search = $state("");
+	let searchedEmployees: Employee[] = $derived(employees.filter(employee =>
+		employee.idNumber.toString().toLowerCase().includes(search.toLowerCase()) ||
+		employee.firstName.toLowerCase().includes(search.toLowerCase()) ||
+		employee.middleName.toLowerCase().includes(search.toLowerCase()) ||
+		employee.lastName.toLowerCase().includes(search.toLowerCase())
+	));
 
 	interface Employee {
 		idNumber: number;
@@ -72,18 +79,18 @@
 		parseEmployees();
 	});
 
-	let addEmployeeModalState = false;
+	let addEmployeeModalState = $state(false);
 	function addEmployeeModalToggle() {
 		addEmployeeModalState = !addEmployeeModalState;
 	}
 
-	let removeEmployeeModalState = false;
+	let removeEmployeeModalState = $state(false);
 	function removeEmployeeModalToggle() {
 		removeEmployeeModalState = !removeEmployeeModalState;
 	}
 
 	let employeeAttendancesModal: Attendances;
-	let employeeAttendancesModalState = false;
+	let employeeAttendancesModalState = $state(false);
 	function employeeAttendancesModalToggle() {
 		if (!employeeAttendancesModalState) {
 			employeeAttendancesModal.init(selectedEmployee);
@@ -92,7 +99,7 @@
 	}
 
 	let employeeSchedulesModal: Schedules;
-	let employeeSchedulesModalState = false;
+	let employeeSchedulesModalState = $state(false);
 	function employeeSchedulesModalToggle() {
 		if (!employeeSchedulesModalState) {
 			employeeSchedulesModal.init(selectedEmployee);
@@ -101,7 +108,7 @@
 	}
 
 	let suspensionModal: Suspension;
-	let suspensionModalState = false;
+	let suspensionModalState = $state(false);
 	function suspensionModalToggle() {
 		if (!suspensionModalState) {
 			suspensionModal.init();
@@ -110,7 +117,7 @@
 	}
 
 	let monthAttendancesModal: MonthAttendances;
-	let monthAttendancesModalState = false;
+	let monthAttendancesModalState = $state(false);
 	function monthAttendancesModalToggle() {
 		if (!monthAttendancesModalState) {
 			monthAttendancesModal.getSchoolYears();
@@ -137,11 +144,17 @@
 		</ButtonGroup>
 	</Navbar>
 
+	{#if searchedEmployees.length != 0 || search.length != 0}
+		<div style="padding: .5%;">
+			<Input type="text" placeholder="Search" bind:value={search} />
+		</div>
+	{/if}
+
 	<div style="padding: .5%;">
 		<Table responsive striped>
 			<thead>
 				<tr>
-					{#if employees.length == 0}
+					{#if searchedEmployees.length == 0}
 						<th></th>
 					{:else}
 							<th scope="col">ACTION</th>
@@ -154,12 +167,12 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#if employees.length == 0}
+				{#if searchedEmployees.length == 0}
 					<tr>
 						<td class="fw-bold text-center">No Employee Found</td>
 					</tr>
 				{:else}
-					{#each employees as employee}
+					{#each searchedEmployees as employee}
 						<tr>
 							<td>
 								<ButtonGroup vertical size="sm">
@@ -180,6 +193,3 @@
 		</Table>
 	</div>
 </main>
-
-<style>
-</style>
