@@ -2,7 +2,7 @@
 	import "bootstrap/dist/css/bootstrap.min.css";
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
 	import 'bootstrap-icons/font/bootstrap-icons.css';
-	import { Button, ButtonGroup, Table, Navbar, NavbarBrand, Icon, Input } from "@sveltestrap/sveltestrap";
+	import { Button, ButtonGroup, Table, Navbar, NavbarBrand, Icon, Input, Container, Row, Col, Dropdown, DropdownToggle, DropdownItem, DropdownMenu } from "@sveltestrap/sveltestrap";
 	import { onMount } from "svelte";
 	import AddEmployee from "./lib/AddEmployee.svelte";
 	import RemoveEmployee from "./lib/RemoveEmployee.svelte";
@@ -126,7 +126,7 @@
 	}
 </script>
 
-<main>
+<main class="px-4">
 	<AddEmployee isModalOpen={addEmployeeModalState} modalToggle={addEmployeeModalToggle} refreshList={parseEmployees} />
 	<RemoveEmployee isModalOpen={removeEmployeeModalState} modalToggle={removeEmployeeModalToggle} refreshList={parseEmployees} idNumber={selectedEmployee} />
 	<Schedules bind:this={employeeSchedulesModal} isModalOpen={employeeSchedulesModalState} modalToggle={employeeSchedulesModalToggle} />
@@ -136,33 +136,39 @@
 
 	<Navbar fixed="top" sticky="top">
 		<NavbarBrand href="/" class="fw-bold">Attendance Viewer</NavbarBrand>
-		<ButtonGroup size="sm">
-			<Button color="success" on:click={monthAttendancesModalToggle}><Icon name="list-columns-reverse" class="fw-bold" /> All Attendances</Button>
-			<Button color="success" on:click={addEmployeeModalToggle}><Icon name="person-plus-fill" class="fw-bold" /> Add Employee</Button>
-			<Button color="success" on:click={suspensionModalToggle}><Icon name="calendar-plus-fill" class="fw-bold" /> Add Suspension</Button>
-			<Button color="info" on:click={parseEmployees}><Icon name="arrow-clockwise" class="fw-bold" /> Refresh</Button>
-		</ButtonGroup>
 	</Navbar>
 
 	{#if searchedEmployees.length != 0 || search.length != 0}
-		<div style="padding: .5%;">
-			<Input type="text" placeholder="Search" bind:value={search} />
-		</div>
+		<Container fluid class="px-0">
+			<Row cols={2}>
+				<Col xs={12} md={6}>
+					<Input type="text" placeholder="Search" bind:value={search} class="shadow" />
+				</Col>
+				<Col xs={12} md={6} class="mt-1">
+					<div class="h-100 d-flex align-items-center justify-content-center justify-content-md-end">
+						<ButtonGroup size="sm" class="shadow">
+							<Button outline color="primary" on:click={monthAttendancesModalToggle}><Icon name="list-columns-reverse" class="fw-bold" /> All Attendances</Button>
+							<Button outline color="primary" on:click={addEmployeeModalToggle}><Icon name="person-plus" class="fw-bold" /> Add Employee</Button>
+							<Button outline color="primary" on:click={suspensionModalToggle}><Icon name="calendar-plus" class="fw-bold" /> Add Suspension</Button>
+							<Button outline color="primary" on:click={parseEmployees}><Icon name="arrow-clockwise" class="fw-bold" /> Refresh</Button>
+						</ButtonGroup>
+					</div>
+				</Col>
+			</Row>
+		</Container>
 	{/if}
 
-	<div style="padding: .5%;">
-		<Table responsive striped>
+	<div class="mt-4 shadow rounded overflow-hidden">
+		<Table responsive hover class="mb-0">
 			<thead>
 				<tr>
-					{#if searchedEmployees.length == 0}
-						<th></th>
-					{:else}
-							<th scope="col">ACTION</th>
-							<th scope="col">ID NUMBER</th>
-							<th scope="col">TYPE</th>
-							<th scope="col">FIRST NAME</th>
-							<th scope="col">MIDDLE NAME</th>
-							<th scope="col">LAST NAME</th>
+					{#if searchedEmployees.length != 0}
+						<th scope="col">ID NUMBER</th>
+						<th scope="col">TYPE</th>
+						<th scope="col">FIRST NAME</th>
+						<th scope="col">MIDDLE NAME</th>
+						<th scope="col">LAST NAME</th>
+						<th scope="col"></th>
 					{/if}
 				</tr>
 			</thead>
@@ -174,18 +180,22 @@
 				{:else}
 					{#each searchedEmployees as employee}
 						<tr>
-							<td>
-								<ButtonGroup vertical size="sm">
-									<Button color="primary" on:click={() => {selectEmployee(employee.idNumber); employeeAttendancesModalToggle();}}>Attendances</Button>
-									<Button color="primary" on:click={() => {selectEmployee(employee.idNumber); employeeSchedulesModalToggle();}}>Schedules</Button>
-									<Button color="danger" on:click={() => {selectEmployee(employee.idNumber); removeEmployeeModalToggle();}}>Remove</Button>
-								</ButtonGroup>
-							</td>
 							<td>{employee.idNumber}</td>
 							<td>{employee.employeeType}</td>
 							<td>{employee.firstName}</td>
 							<td>{employee.middleName}</td>
 							<td>{employee.lastName}</td>
+							<td style="width: 1%;">
+								<Dropdown style="width: 100%;">
+									<DropdownToggle outline color="primary" size="sm"><Icon name="three-dots" class="fw-bold" /></DropdownToggle>
+									<DropdownMenu>
+										<DropdownItem on:click={() => {selectEmployee(employee.idNumber); employeeAttendancesModalToggle();}} ><Icon name="card-list" /> Attendances</DropdownItem>
+										<DropdownItem on:click={() => {selectEmployee(employee.idNumber); employeeSchedulesModalToggle();}}><Icon name="calendar" /> Schedules</DropdownItem>
+										<DropdownItem divider />
+										<DropdownItem on:click={() => {selectEmployee(employee.idNumber); removeEmployeeModalToggle();}} class="text-danger"><Icon name="trash" /> Remove</DropdownItem>
+									</DropdownMenu>
+								</Dropdown>
+							</td>
 						</tr>
 					{/each}
 				{/if}
