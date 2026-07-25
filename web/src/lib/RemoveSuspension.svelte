@@ -30,7 +30,7 @@
 		Are you sure to remove the suspension on <span class="fw-bold">{selectedDate.Month}/{selectedDate.Day}/{selectedDate.Year}</span>? This action is irreversible.
 	</ModalBody>
 	<ModalFooter>
-		<Button color="secondary" on:click={modalToggle}>Back</Button>
-		<Button color="danger" on:click={removeSuspended}>Remove</Button>
+		<Button outline color="secondary" on:click={modalToggle}>Back</Button>
+		<Button outline color="danger" on:click={removeSuspended}>Remove</Button>
 	</ModalFooter>
 </Modal>

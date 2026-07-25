@@ -124,7 +124,7 @@
 		</Table>
 	</ModalBody>
 	<ModalFooter>
-		<Button color="secondary" on:click={clearVars}>Back</Button>
-		<Button color="success" type="submit" on:click={addSchedule}>Submit</Button>
+		<Button outline color="secondary" on:click={clearVars}>Back</Button>
+		<Button outline color="success" type="submit" on:click={addSchedule}>Submit</Button>
 	</ModalFooter>
 </Modal>

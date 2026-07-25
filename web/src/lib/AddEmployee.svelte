@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "bootstrap/dist/css/bootstrap.min.css";
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
-	import { Button, Form, FormGroup, Input, InputGroup, Modal, ModalBody } from "@sveltestrap/sveltestrap";
+	import { Button, Form, FormGroup, Icon, Input, InputGroup, Modal, ModalBody } from "@sveltestrap/sveltestrap";
 
 	let { refreshList, isModalOpen, modalToggle } = $props();
 
@@ -88,7 +88,7 @@
 				<Input type="text" required bind:value={lastName} />
 			</FormGroup>
 			<div class="text-end">
-				<Button type="submit" color="primary" on:click={toggleValidate}>Add</Button>
+				<Button outline type="submit" color="primary" on:click={toggleValidate}><Icon name="plus-lg" /></Button>
 			</div>
 		</Form>
 	</ModalBody>

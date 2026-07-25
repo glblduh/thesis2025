@@ -37,7 +37,7 @@
 		Are you sure to remove schedule for school year <span class="fw-bold">{schoolYear}</span>? This action is irreversible.
 	</ModalBody>
 	<ModalFooter>
-		<Button color="secondary" on:click={modalToggle}>Back</Button>
-		<Button color="danger" on:click={removeEmployee}>Remove</Button>
+		<Button outline color="secondary" on:click={modalToggle}>Back</Button>
+		<Button outline color="danger" on:click={removeEmployee}>Remove</Button>
 	</ModalFooter>
 </Modal>

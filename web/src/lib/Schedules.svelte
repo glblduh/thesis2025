@@ -2,7 +2,7 @@
 	import "bootstrap/dist/css/bootstrap.min.css";
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
 	import 'bootstrap-icons/font/bootstrap-icons.css';
-	import { Button, Table, Modal, ModalBody, Form, FormGroup, Input, ModalFooter } from "@sveltestrap/sveltestrap";
+	import { Button, Table, Modal, ModalBody, Form, FormGroup, Input, ModalFooter, Icon } from "@sveltestrap/sveltestrap";
     import UpdateSchedule from "./UpdateSchedule.svelte";
     import RemoveSchedule from "./RemoveSchedule.svelte";
     import type { ApiRes, Schedule, SchoolYearRange, DayTimeRange } from "./utils";
@@ -79,7 +79,8 @@
 			</Input>
 		</FormGroup>
 		{#if selectedSchoolYear != undefined}
-			<Table size="sm" striped>
+			<hr />
+			<Table size="sm" responsive>
 				<thead>
 					<tr>
 						<th scope="col" class="text-center">DAY</th>
@@ -109,9 +110,9 @@
 	</ModalBody>
 	<ModalFooter>
 		{#if selectedSchoolYear != undefined}
-			<Button color="danger" disabled={selectedSchoolYear == undefined} on:click={() => {removeScheduleModal.setSchoolYear(selectedSchoolYear as string); removeScheduleModalToggle();}}>Remove Schedule</Button>
-			<Button color="info" disabled={selectedSchoolYear == undefined} on:click={() => {addScheduleModal.setSchedule(getSelectedYearSchedule(selectedSchoolYear as string)); addScheduleModalToggle();}}>Edit Schedule</Button>
+			<Button outline color="danger" disabled={selectedSchoolYear == undefined} on:click={() => {removeScheduleModal.setSchoolYear(selectedSchoolYear as string); removeScheduleModalToggle();}}><Icon name="trash" /></Button>
+			<Button outline color="info" disabled={selectedSchoolYear == undefined} on:click={() => {addScheduleModal.setSchedule(getSelectedYearSchedule(selectedSchoolYear as string)); addScheduleModalToggle();}}><Icon name="pencil" /></Button>
 		{/if}
-		<Button color="success" on:click={addScheduleModalToggle}>Add Schedule</Button>
+		<Button outline color="success" on:click={addScheduleModalToggle}><Icon name="plus-lg" /></Button>
 	</ModalFooter>
 </Modal>

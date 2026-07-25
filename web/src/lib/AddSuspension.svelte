@@ -2,7 +2,7 @@
 	import "bootstrap/dist/css/bootstrap.min.css";
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
 	import 'bootstrap-icons/font/bootstrap-icons.css';
-	import { Button, Table, Modal, ModalBody, Input, ModalFooter, Form, Icon, FormGroup, InputGroup, Row, Col } from "@sveltestrap/sveltestrap";
+	import { Button, Table, Modal, ModalBody, Input, Form, Icon, FormGroup, InputGroup } from "@sveltestrap/sveltestrap";
     import type { SuspendedDay, DayDate } from "./utils";
     import RemoveSuspension from "./RemoveSuspension.svelte";
 
@@ -78,18 +78,19 @@
 				</FormGroup>
 			</InputGroup>
 			<div class="text-end">
-				<Button type="submit" color="info" on:click={toggleValidate}><Icon name="plus-lg" class="fw-bold"/></Button>
+				<Button outline type="submit" color="primary" on:click={toggleValidate}><Icon name="plus-lg" /></Button>
 			</div>
 		</Form>
 		{#if suspensions.length != 0}
-			<Table responsive striped>
+			<hr />
+			<Table size="sm" responsive>
 				<thead>
 					<tr>
 						<th scope="col">YEAR</th>
 						<th scope="col">MONTH</th>
 						<th scope="col">DAY</th>
 						<th scope="col">TYPE</th>
-						<th scope="col">REMOVE?</th>
+						<th scope="col"></th>
 					</tr>
 					{#each suspensions as suspension }
 						<tr>
@@ -97,10 +98,12 @@
 							<td>{suspension.Date.Month}</td>
 							<td>{suspension.Date.Day}</td>
 							<td>{suspension.Type}</td>
-							<td><Button color="danger" on:click={() => {
+							<td style="width: 1%;">
+								<Button outline color="danger" on:click={() => {
 								removeSuspensionModal.init(suspension.Date);
 								removeSuspensionModalToggle();
-							}}>REMOVE</Button></td>
+								}} style="width: 100%;"><Icon name="trash" /></Button>
+							</td>
 						</tr>
 					{/each}
 				</thead>

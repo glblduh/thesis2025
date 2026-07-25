@@ -2,7 +2,7 @@
 	import "bootstrap/dist/css/bootstrap.min.css";
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
 	import 'bootstrap-icons/font/bootstrap-icons.css';
-	import { Button, Table, Modal, ModalBody, FormGroup, Input, ModalFooter, InputGroup, Badge, ButtonGroup } from "@sveltestrap/sveltestrap";
+	import { Button, Table, Modal, ModalBody, FormGroup, Input, ModalFooter, InputGroup, Badge, ButtonGroup, Icon } from "@sveltestrap/sveltestrap";
 	import type { AttendancesDates, DayDate, Attendance, ApiRes } from "./utils";
     import { getSchedules, monthsName, badgeColor } from "./utils";
     import UpdateAttendance from "./UpdateAttendance.svelte";
@@ -117,7 +117,8 @@
 			</FormGroup>
 		</InputGroup>
 		{#if dates.Months != undefined && selectedDate.Month != null}
-			<Table striped size="sm" responsive>
+			<hr />
+			<Table size="sm" responsive>
 				<thead>
 					<tr>
 						<th scope="col" class="text-center">DATE</th>
@@ -126,7 +127,7 @@
 						<th scope="col" class="text-center">TIME IN MINUTE</th>
 						<th scope="col" class="text-center">TIME OUT HOUR</th>
 						<th scope="col" class="text-center">TIME OUT MINUTE</th>
-						<th scope="col" class="text-center">ACTION</th>
+						<th scope="col" class="text-center"></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -146,13 +147,13 @@
 							{#if attendance.State != "ABSENT" && attendance.State != "DAYOFF"}
 								<td>
 									<ButtonGroup size="sm">
-										<Button color="info" on:click={() => {
+										<Button outline color="info" on:click={() => {
 											updateAttendanceModal.init(selectedEmployee, true, schedules?.Schedules, selectedSchoolYear as string, attendance);
-											updateAttendanceModalToggle();}}>EDIT</Button>
-										<Button color="danger" on:click={() => {
+											updateAttendanceModalToggle();}}><Icon name="pencil" /></Button>
+										<Button outline color="danger" on:click={() => {
 											removeAttendanceModal.init(selectedEmployee, attendance.Date);
 											removeAttendanceModalToggle();
-										}}>REMOVE</Button>
+										}}><Icon name="trash" /></Button>
 									</ButtonGroup>
 								</td>
 							{:else}
@@ -165,6 +166,6 @@
 		{/if}
 	</ModalBody>
 	<ModalFooter>
-		<Button color="success" on:click={() => {updateAttendanceModal.init(selectedEmployee, false, schedules?.Schedules, selectedSchoolYear as string, undefined); updateAttendanceModalToggle();}}>Add Attendance</Button>
+		<Button outline color="success" on:click={() => {updateAttendanceModal.init(selectedEmployee, false, schedules?.Schedules, selectedSchoolYear as string, undefined); updateAttendanceModalToggle();}}><Icon name="plus-lg" /></Button>
 	</ModalFooter>
 </Modal>

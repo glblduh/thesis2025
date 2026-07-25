@@ -34,7 +34,7 @@
 		Are you sure to remove the attendance of <span class="fw-bold">{selectedEmployee}</span> for <span class="fw-bold">{monthsName[selectedDate.Month-1]} {selectedDate.Day}, {selectedDate.Year}</span>? This action is irreversible.
 	</ModalBody>
 	<ModalFooter>
-		<Button color="secondary" on:click={modalToggle}>Back</Button>
-		<Button color="danger" on:click={removeAttendance}>Remove</Button>
+		<Button outline color="secondary" on:click={modalToggle}>Back</Button>
+		<Button outline color="danger" on:click={removeAttendance}>Remove</Button>
 	</ModalFooter>
 </Modal>

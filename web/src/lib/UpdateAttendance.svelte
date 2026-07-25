@@ -146,7 +146,7 @@
 		<Input disabled={attendance.Date.Day==0} type="switch" label="Leave?" bind:checked={isLeave} />
 	</ModalBody>
 	<ModalFooter>
-		<Button color="secondary" on:click={clearVars}>Back</Button>
-		<Button color="success" on:click={updateAttendance}>Submit</Button>
+		<Button outline color="secondary" on:click={clearVars}>Back</Button>
+		<Button outline color="success" on:click={updateAttendance}>Submit</Button>
 	</ModalFooter>
 </Modal>
