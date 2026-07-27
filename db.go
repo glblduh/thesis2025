@@ -16,6 +16,8 @@ func openDB() (*bbolt.DB, error) {
 }
 
 func initializeDB() {
+	Info.Println("Initializing Records DB")
+
 	db, dbErr := openDB()
 	if dbErr != nil {
 		Error.Fatalln("Opening DB error")
@@ -37,6 +39,8 @@ func initializeDB() {
 		}
 		return nil
 	})
+
+	Info.Println("Successfully initialized Records DB")
 }
 
 func addEmployee(idNumber string, isFaculty bool, employeeStruct employee) error {

@@ -33,11 +33,15 @@ var (
 	ErrSuspendedBucketNotFound = errors.New("suspended bucket not found")
 	ErrYearBucketNotFound = errors.New("year bucket not found")
 	ErrMonthBucketNotFound = errors.New("month bucket not found")
+
+	ErrAuthUserNotFound = errors.New("user not found")
+	ErrAuthKeyIncorrect = errors.New("auth key is incorrect")
 )
 
 type AttendanceState string
 type AttendState     string
 type SuspensionType  string
+type UserType        string
 
 const (
 	DAYOFF     AttendanceState = "DAYOFF"
@@ -52,6 +56,9 @@ const (
 	NOTSUSPENDED SuspensionType = "NOTSUSPENDED"
 	SUSPENSION   SuspensionType = "SUSPENSION"
 	HOLIDAY      SuspensionType = "HOLIDAY"
+
+	FACULTY UserType = "FACULTY"
+	STAFF   UserType = "STAFF"
 )
 
 type (
@@ -139,6 +146,12 @@ type (
 		SchoolYear string
 		Date dayDate
 		Time attendanceTime
+	}
+
+	userAuth struct {
+		Username string
+		Type UserType
+		Key string
 	}
 )
 
@@ -233,5 +246,10 @@ type (
 	apiGetAllSchoolYearsBody struct {
 		Faculty bool
 		Staff bool
+	}
+
+	apiUserAuthBody struct {
+		Username string
+		Password string
 	}
 )

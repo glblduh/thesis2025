@@ -530,3 +530,25 @@ func apiGetAllSchoolYears(w http.ResponseWriter, r *http.Request) {
 
 	encodeRes(w, res)
 }
+
+func apiUserAuth(w http.ResponseWriter, r *http.Request) {
+	body := apiUserAuthBody{}
+
+	if decodeBody(w, r.Body, &body, false) != nil {
+		return
+	}
+
+	userInfo, validateErr := validateAuth(body.Username, body.Password)
+	if validateErr != nil {
+		status := http.StatusUnauthorized
+
+		if errors.Is(validateErr, ErrAuthUserNotFound) {
+			status = http.StatusNotFound
+		}
+
+		errorRes(w, validateErr.Error(), status)
+		return
+	}
+
+	encodeRes(w, userInfo)
+}
