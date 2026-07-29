@@ -499,7 +499,7 @@ func getMonthAttendances(idNumber string, schoolYearString string, date dayDate)
 	})
 }
 
-func getAllEmployees() (allEmployees, error) {
+func getAllEmployees(faculty bool, staff bool) (allEmployees, error) {
 	allEmployeesStruct := allEmployees{}
 
 	db, dbErr := openDB()
@@ -509,29 +509,32 @@ func getAllEmployees() (allEmployees, error) {
 	defer db.Close()
 
 	dbViewErr := db.View(func(tx *bbolt.Tx) error {
-		staffBucket := tx.Bucket([]byte("Staff"))
-		facultyBucket := tx.Bucket([]byte("Faculty"))
+		if faculty {
+			facultyBucket := tx.Bucket([]byte("Faculty"))
+			facultyBucketCursor := facultyBucket.Cursor()
+			for facultyKey, _ := facultyBucketCursor.First(); facultyKey != nil; facultyKey, _ = facultyBucketCursor.Next() {
+				currentFacultyBucket := facultyBucket.Bucket(facultyKey)
+				currentFacultyIdNumber, convertErr := strconv.Atoi(string(facultyKey))
+				if convertErr != nil {
+					return convertErr
+				}
 
-		staffBucketCursor := staffBucket.Cursor()
-		for staffKey, _ := staffBucketCursor.First(); staffKey != nil; staffKey, _ = staffBucketCursor.Next() {
-			currentStaffBucket := staffBucket.Bucket(staffKey)
-			currentStaffIdNumber, convertErr := strconv.Atoi(string(staffKey))
-			if convertErr != nil {
-				return convertErr
+				allEmployeesStruct.Faculty = append(allEmployeesStruct.Faculty, employeeInfoDBToStruct(currentFacultyBucket, currentFacultyIdNumber, true))
 			}
-
-			allEmployeesStruct.Staff = append(allEmployeesStruct.Staff, employeeInfoDBToStruct(currentStaffBucket, currentStaffIdNumber, false))
 		}
 
-		facultyBucketCursor := facultyBucket.Cursor()
-		for facultyKey, _ := facultyBucketCursor.First(); facultyKey != nil; facultyKey, _ = facultyBucketCursor.Next() {
-			currentFacultyBucket := facultyBucket.Bucket(facultyKey)
-			currentFacultyIdNumber, convertErr := strconv.Atoi(string(facultyKey))
-			if convertErr != nil {
-				return convertErr
-			}
+		if staff {
+			staffBucket := tx.Bucket([]byte("Staff"))
+			staffBucketCursor := staffBucket.Cursor()
+			for staffKey, _ := staffBucketCursor.First(); staffKey != nil; staffKey, _ = staffBucketCursor.Next() {
+				currentStaffBucket := staffBucket.Bucket(staffKey)
+				currentStaffIdNumber, convertErr := strconv.Atoi(string(staffKey))
+				if convertErr != nil {
+					return convertErr
+				}
 
-			allEmployeesStruct.Faculty = append(allEmployeesStruct.Faculty, employeeInfoDBToStruct(currentFacultyBucket, currentFacultyIdNumber, true))
+				allEmployeesStruct.Staff = append(allEmployeesStruct.Staff, employeeInfoDBToStruct(currentStaffBucket, currentStaffIdNumber, false))
+			}
 		}
 
 		return nil

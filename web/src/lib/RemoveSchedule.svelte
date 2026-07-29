@@ -3,7 +3,7 @@
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
 	import 'bootstrap-icons/font/bootstrap-icons.css';
 	import { Button, Modal, ModalBody, ModalFooter } from "@sveltestrap/sveltestrap";
-	import { modFetch } from "./utils.ts"
+	import { modFetch } from "./utils"
 
 	let { isModalOpen, modalToggle, refreshList } = $props();
 	let idNumber: number = 0;

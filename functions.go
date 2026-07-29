@@ -56,7 +56,7 @@ func employeeInfoDBToStruct(employeeBucket *bbolt.Bucket, idNumber int, isFacult
 	return employee{
 		IdNumber:     idNumber,
 		IsFaculty:    isFaculty,
-		EmployeeType: string(employeeBucket.Get([]byte("EmployeeType"))),
+		EmployeeType: UserType(employeeBucket.Get([]byte("EmployeeType"))),
 		FirstName:    string(employeeBucket.Get([]byte("FirstName"))),
 		MiddleName:   string(employeeBucket.Get([]byte("MiddleName"))),
 		LastName:     string(employeeBucket.Get([]byte("LastName"))),
@@ -287,4 +287,31 @@ func getSchoolYearIteration(typeBucket *bbolt.Bucket) []string {
 	}
 
 	return schoolYears
+}
+
+func getContextUserType(w http.ResponseWriter, r *http.Request) (UserType, error){
+	rawUserType := r.Context().Value("userType")
+	userType, assertOk := rawUserType.(UserType)
+
+	if !assertOk {
+		errorRes(w, ErrAuthInvalidUserType.Error(), http.StatusUnprocessableEntity)
+		return userType, ErrAuthInvalidUserType
+	}
+
+	return userType, nil
+}
+
+func accessTypeIDMatch(w http.ResponseWriter, accessType UserType, idNumber int) error {
+	employeeStruct, verifyErr := getEmployee(strconv.Itoa(idNumber))
+	if verifyErr != nil {
+		errorRes(w, verifyErr.Error(), http.StatusInternalServerError)
+		return verifyErr
+	}
+
+	if accessType != API && accessType != employeeStruct.EmployeeType {
+		errorRes(w, ErrAuthForbidden.Error(), http.StatusForbidden)
+		return ErrAuthForbidden
+	}
+
+	return nil
 }

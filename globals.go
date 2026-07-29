@@ -36,6 +36,9 @@ var (
 
 	ErrAuthUserNotFound = errors.New("user not found")
 	ErrAuthKeyIncorrect = errors.New("auth key is incorrect")
+	ErrAuthUnauthorized = errors.New("unauthorized")
+	ErrAuthInvalidUserType = errors.New("invalid user type")
+	ErrAuthForbidden = errors.New("request forbidden")
 )
 
 type AttendanceState string
@@ -59,6 +62,7 @@ const (
 
 	FACULTY UserType = "FACULTY"
 	STAFF   UserType = "STAFF"
+	API   UserType = "API"
 )
 
 type (
@@ -89,7 +93,7 @@ type (
 	employee struct {
 		IdNumber     int
 		IsFaculty    bool
-		EmployeeType string
+		EmployeeType UserType
 		FirstName    string
 		MiddleName   string
 		LastName     string
@@ -134,11 +138,6 @@ type (
 	monthAttendances struct {
 		EmployeeInfo employee
 		Attendances []attendance
-	}
-
-	allAttendances struct {
-		Faculty []monthAttendances
-		Staff []monthAttendances
 	}
 
 	attend struct {
@@ -240,7 +239,7 @@ type (
 		SchoolYear string
 		Date dayDate
 		AttendancesEmpty bool
-		Attendances allAttendances
+		Attendances []monthAttendances
 	}
 
 	apiGetAllSchoolYearsBody struct {

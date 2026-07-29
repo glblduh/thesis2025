@@ -4,7 +4,7 @@
 	import 'bootstrap-icons/font/bootstrap-icons.css';
 	import { Button, Modal, ModalBody, FormGroup, Input, Table, InputGroup, Form, ModalFooter } from "@sveltestrap/sveltestrap";
 	import type { ApiRes, Schedule, SchoolYearRange, DayTimeRange } from "./utils";
-	import { modFetch } from "./utils.ts"
+	import { modFetch } from "./utils"
 
 	let { isModalOpen, modalToggle } = $props();
 

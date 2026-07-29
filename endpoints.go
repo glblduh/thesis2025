@@ -1,8 +1,8 @@
 package main
 
 import (
-	"io"
 	"errors"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -11,8 +11,18 @@ import (
 )
 
 func apiAddEmployee(w http.ResponseWriter, r *http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
 	body := apiAddEmployeeBodyRes{}
 	if decodeBody(w, r.Body, &body, false) != nil {
+		return
+	}
+
+	if userType == FACULTY && !body.IsFaculty {
+		errorRes(w, ErrAuthForbidden.Error(), http.StatusForbidden)
 		return
 	}
 
@@ -31,8 +41,17 @@ func apiAddEmployee(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiRemoveEmployee(w http.ResponseWriter, r *http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
 	body := apiRemoveEmployeeBodyRes{}
 	if decodeBody(w, r.Body, &body, false) != nil {
+		return
+	}
+
+	if accessTypeIDMatch(w, userType, body.IdNumber) != nil {
 		return
 	}
 
@@ -46,8 +65,17 @@ func apiRemoveEmployee(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiUpdateSchedule(w http.ResponseWriter, r *http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
 	body := apiUpdateScheduleBodyRes{}
 	if decodeBody(w, r.Body, &body, false) != nil {
+		return
+	}
+
+	if accessTypeIDMatch(w, userType, body.IdNumber) != nil {
 		return
 	}
 
@@ -61,6 +89,11 @@ func apiUpdateSchedule(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiGetAllYearsSchedule(w http.ResponseWriter, r *http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
 	httpVars := mux.Vars(r)
 
 	idNumber, httpVarUnescapeErr := url.QueryUnescape(httpVars["idNumber"])
@@ -81,6 +114,10 @@ func apiGetAllYearsSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if accessTypeIDMatch(w, userType, idNumberInt) != nil {
+		return
+	}
+
 	encodeRes(w, apiGetAllYearsScheduleRes{
 		IdNumber:  idNumberInt,
 		Schedules: employeeSchedules,
@@ -88,6 +125,11 @@ func apiGetAllYearsSchedule(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiGetSchedule(w http.ResponseWriter, r *http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
 	httpVars := mux.Vars(r)
 
 	idNumber, httpVarUnescapeErr := url.QueryUnescape(httpVars["idNumber"])
@@ -95,6 +137,17 @@ func apiGetSchedule(w http.ResponseWriter, r *http.Request) {
 		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	idNumberInt, idNumberConvertErr := strconv.Atoi(idNumber)
+	if idNumberConvertErr != nil {
+		errorRes(w, idNumberConvertErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if accessTypeIDMatch(w, userType, idNumberInt) != nil {
+		return
+	}
+
 	schoolYearRequest, httpVarUnescapeErr := url.QueryUnescape(httpVars["schoolYear"])
 	if httpVarUnescapeErr != nil {
 		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
@@ -113,12 +166,6 @@ func apiGetSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	idNumberInt, idNumberConvertErr := strconv.Atoi(idNumber)
-	if idNumberConvertErr != nil {
-		errorRes(w, idNumberConvertErr.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	encodeRes(w, apiGetScheduleRes{
 		IdNumber: idNumberInt,
 		Schedule: employeeSchedule,
@@ -126,11 +173,26 @@ func apiGetSchedule(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiGetEmployee(w http.ResponseWriter, r *http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
 	httpVars := mux.Vars(r)
 
 	idNumber, httpVarUnescapeErr := url.QueryUnescape(httpVars["idNumber"])
 	if httpVarUnescapeErr != nil {
 		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	idNumberInt, idNumberConvertErr := strconv.Atoi(idNumber)
+	if idNumberConvertErr != nil {
+		errorRes(w, idNumberConvertErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if accessTypeIDMatch(w, userType, idNumberInt) != nil {
 		return
 	}
 
@@ -144,8 +206,17 @@ func apiGetEmployee(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiUpdateAttendance(w http.ResponseWriter, r *http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
 	body := apiUpdateAttendanceBodyRes{}
 	if decodeBody(w, r.Body, &body, false) != nil {
+		return
+	}
+
+	if accessTypeIDMatch(w, userType, body.IdNumber) != nil {
 		return
 	}
 
@@ -159,6 +230,11 @@ func apiUpdateAttendance(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiGetAttendance(w http.ResponseWriter, r *http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
 	httpVars := mux.Vars(r)
 
 	idNumber, httpVarUnescapeErr := url.QueryUnescape(httpVars["idNumber"])
@@ -169,6 +245,10 @@ func apiGetAttendance(w http.ResponseWriter, r *http.Request) {
 	idNumberInt, convertErr := strconv.Atoi(idNumber)
 	if convertErr != nil {
 		errorRes(w, convertErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if accessTypeIDMatch(w, userType, idNumberInt) != nil {
 		return
 	}
 
@@ -230,11 +310,25 @@ func apiGetAttendance(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiGetMonthAttendances(w http.ResponseWriter, r *http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
 	httpVars := mux.Vars(r)
 
 	idNumber, httpVarUnescapeErr := url.QueryUnescape(httpVars["idNumber"])
 	if httpVarUnescapeErr != nil {
 		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	idNumberInt, convertErr := strconv.Atoi(idNumber)
+	if convertErr != nil {
+		errorRes(w, convertErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if accessTypeIDMatch(w, userType, idNumberInt) != nil {
 		return
 	}
 
@@ -281,7 +375,15 @@ func apiGetMonthAttendances(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiGetAllEmployees(w http.ResponseWriter, r *http.Request) {
-	allEmployeesStruct, getAllEmployeesErr := getAllEmployees()
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
+	facultyEnable := userType == FACULTY || userType == API
+	staffEnable := userType == STAFF || userType == API
+
+	allEmployeesStruct, getAllEmployeesErr := getAllEmployees(facultyEnable, staffEnable)
 	if getAllEmployeesErr != nil {
 		errorRes(w, getAllEmployeesErr.Error(), http.StatusInternalServerError)
 		return
@@ -291,8 +393,17 @@ func apiGetAllEmployees(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiRemoveSchedule(w http.ResponseWriter, r *http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
 	body := apiRemoveScheduleBodyRes{}
 	if decodeBody(w, r.Body, &body, false) != nil {
+		return
+	}
+
+	if accessTypeIDMatch(w, userType, body.IdNumber) != nil {
 		return
 	}
 
@@ -306,11 +417,25 @@ func apiRemoveSchedule(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiGetAttendancesDates(w http.ResponseWriter, r*http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
 	httpVars := mux.Vars(r)
 
 	idNumber, httpVarUnescapeErr := url.QueryUnescape(httpVars["idNumber"])
 	if httpVarUnescapeErr != nil {
 		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	idNumberInt, convertErr := strconv.Atoi(idNumber)
+	if convertErr != nil {
+		errorRes(w, convertErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if accessTypeIDMatch(w, userType, idNumberInt) != nil {
 		return
 	}
 
@@ -340,8 +465,17 @@ func apiGetAttendancesDates(w http.ResponseWriter, r*http.Request) {
 }
 
 func apiRemoveAttendance(w http.ResponseWriter, r *http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
 	body := apiRemoveAttendanceBodyRes{}
 	if decodeBody(w, r.Body, &body, false) != nil {
+		return
+	}
+
+	if accessTypeIDMatch(w, userType, body.IdNumber) != nil {
 		return
 	}
 
@@ -355,6 +489,11 @@ func apiRemoveAttendance(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiAttend(w http.ResponseWriter, r *http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
 	httpVars := mux.Vars(r)
 
 	idNumber, httpVarUnescapeErr := url.QueryUnescape(httpVars["idNumber"])
@@ -365,6 +504,10 @@ func apiAttend(w http.ResponseWriter, r *http.Request) {
 	idNumberInt, convertErr := strconv.Atoi(idNumber)
 	if convertErr != nil {
 		errorRes(w, convertErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if accessTypeIDMatch(w, userType, idNumberInt) != nil {
 		return
 	}
 
@@ -424,6 +567,11 @@ func apiGetAllSuspended(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
 	httpVars := mux.Vars(r)
 	res := apiGetAllMonthAttendancesRes{}
 
@@ -464,7 +612,10 @@ func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
 	res.Date = date
 	res.AttendancesEmpty = true
 
-	allEmployees, getAllEmployeersErr := getAllEmployees()
+	facultyEnable := userType == FACULTY || userType == API
+	staffEnable := userType == STAFF || userType == API
+
+	allEmployees, getAllEmployeersErr := getAllEmployees(facultyEnable, staffEnable)
 	if getAllEmployeersErr != nil {
 		errorRes(w, getAllEmployeersErr.Error(), http.StatusInternalServerError)
 		return
@@ -483,7 +634,7 @@ func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
 			res.AttendancesEmpty = false
 		}
 
-		res.Attendances.Faculty = append(res.Attendances.Faculty, monthAttendances{
+		res.Attendances = append(res.Attendances, monthAttendances{
 			EmployeeInfo: currentFaculty,
 			Attendances: currentFacultyAttendances,
 		})
@@ -502,7 +653,7 @@ func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
 			res.AttendancesEmpty = false
 		}
 
-		res.Attendances.Staff = append(res.Attendances.Staff, monthAttendances{
+		res.Attendances = append(res.Attendances, monthAttendances{
 			EmployeeInfo: currentStaff,
 			Attendances: currentStaffAttendances,
 		})
@@ -512,6 +663,11 @@ func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiGetAllSchoolYears(w http.ResponseWriter, r *http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
 	body := apiGetAllSchoolYearsBody{}
 
 	decodeErr := decodeBody(w, r.Body, &body, true)
@@ -523,7 +679,10 @@ func apiGetAllSchoolYears(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, getAllSchoolYearsErr := getAllSchoolYears(body.Faculty, body.Staff)
+	facultyEnable := body.Faculty && (userType == FACULTY || userType == API)
+	staffEnable := body.Staff && (userType == STAFF || userType == API)
+
+	res, getAllSchoolYearsErr := getAllSchoolYears(facultyEnable, staffEnable)
 	if getAllSchoolYearsErr != nil {
 		errorRes(w, getAllSchoolYearsErr.Error(), http.StatusInternalServerError)
 	}

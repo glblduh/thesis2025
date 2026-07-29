@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
@@ -197,17 +198,26 @@ func apiAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			errorRes(w, "unauthorized", http.StatusUnauthorized)
+			errorRes(w, ErrAuthUnauthorized.Error(), http.StatusUnauthorized)
 			return
 		}
 
 		splittedUserKey := strings.Split(authHeader, ":")
 		if len(splittedUserKey) == 0 {
-			errorRes(w, "unauthorized", http.StatusUnauthorized)
+			errorRes(w, ErrAuthUnauthorized.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		keyValidateErr := validateKey(splittedUserKey[0], splittedUserKey[1])
+		username := splittedUserKey[0]
+		userType := UserType(splittedUserKey[1])
+		userKey := splittedUserKey[2]
+
+		if userType != FACULTY && userType != STAFF && userType == API {
+			errorRes(w, ErrAuthInvalidUserType.Error(), http.StatusUnprocessableEntity)
+			return
+		}
+
+		keyValidateErr := validateKey(username, userKey)
 		if keyValidateErr != nil {
 			status := http.StatusUnauthorized
 
@@ -219,6 +229,8 @@ func apiAuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		next.ServeHTTP(w, r)
+		modContext := context.WithValue(r.Context(), "userType", userType)
+		newRequest := r.WithContext(modContext)
+		next.ServeHTTP(w, newRequest)
 	})
 }

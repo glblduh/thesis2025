@@ -2,7 +2,7 @@
 	import "bootstrap/dist/css/bootstrap.min.css";
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
 	import { Button, Form, FormGroup, Icon, Input, InputGroup, Modal, ModalBody } from "@sveltestrap/sveltestrap";
-    import { modFetch } from "./utils";
+    import { getUserType, modFetch } from "./utils";
 
 	let { refreshList, isModalOpen, modalToggle } = $props();
 
@@ -74,8 +74,12 @@
 				</FormGroup>
 				<FormGroup floating label="Employee Type">
 					<Input placeholder="Employee Type" type="select" bind:value={employeeType}>
-						<option>Faculty</option>
-						<option>Staff</option>
+						{#if getUserType() == "FACULTY"}
+							<option>Faculty</option>
+						{/if}
+						{#if getUserType() == "STAFF"}
+							<option>Staff</option>
+						{/if}
 					</Input>
 				</FormGroup>
 			</InputGroup>

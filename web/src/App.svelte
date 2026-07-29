@@ -17,12 +17,10 @@
 	let employees: Employee[] = $state([]);
 	let selectedEmployee: number = $state(0);
 	let search = $state("");
-	let searchedEmployees: Employee[] = $derived(employees.filter(employee =>
-		employee.idNumber.toString().toLowerCase().includes(search.toLowerCase()) ||
-		employee.firstName.toLowerCase().includes(search.toLowerCase()) ||
-		employee.middleName.toLowerCase().includes(search.toLowerCase()) ||
-		employee.lastName.toLowerCase().includes(search.toLowerCase())
-	));
+	let searchedEmployees: Employee[] = $derived(employees.filter(employee => {
+		const employeeDetails = employee.IdNumber.toString() + employee.FirstName + employee.MiddleName + employee.LastName;
+		return employeeDetails.toLocaleLowerCase().includes(search.toLocaleLowerCase());
+	}));
 	let authenticated = $state(false);
 	$effect(() => {
 		if (authenticated) {
@@ -31,52 +29,23 @@
 	});
 
 	interface Employee {
-		idNumber: number;
-		lastName: string;
-		firstName: string;
-		middleName: string;
-		employeeType: string;
+		IdNumber: number;
+		LastName: string;
+		FirstName: string;
+		MiddleName: string;
+		EmployeeType: string;
+	}
+
+	interface apiRes {
+		Faculty: Employee[]
+		Staff: Employee[]
 	}
 
 	async function parseEmployees() {
-		let getAllEmployees = await modFetch("/api/getallemployees");
-		let jsonAllEmployees = await getAllEmployees.json();
-		let facultyArray = jsonAllEmployees.Faculty;
-		let staffArray = jsonAllEmployees.Staff;
+		const res = await modFetch("/api/getallemployees");
+		const jsonRes: apiRes = await res.json();
 
-		employees.length = 0;
-
-		if (facultyArray != null) {
-			for (let i = 0; i < facultyArray.length; i++) {
-				let currentFaculty = jsonAllEmployees.Faculty[i];
-
-				let parsedEmployee: Employee = {
-					idNumber: currentFaculty.IdNumber,
-					employeeType: currentFaculty.EmployeeType,
-					firstName: currentFaculty.FirstName,
-					middleName: currentFaculty.MiddleName,
-					lastName: currentFaculty.LastName,
-				};
-
-				employees.push(parsedEmployee);
-			}
-		}
-
-		if (staffArray != null) {
-			for (let i = 0; i < staffArray.length; i++) {
-				let currentFaculty = jsonAllEmployees.Staff[i];
-
-				let parsedEmployee: Employee = {
-					idNumber: currentFaculty.IdNumber,
-					employeeType: currentFaculty.EmployeeType,
-					firstName: currentFaculty.FirstName,
-					middleName: currentFaculty.MiddleName,
-					lastName: currentFaculty.LastName,
-				};
-
-				employees.push(parsedEmployee);
-			}
-		}
+		employees = [...jsonRes.Faculty || [], ...jsonRes.Staff || []]
 	}
 
 	function selectEmployee(selected: number) {
@@ -101,7 +70,7 @@
 		removeEmployeeModalState = !removeEmployeeModalState;
 	}
 
-	let employeeAttendancesModal: Attendances = $state();
+	let employeeAttendancesModal: Attendances = $state() as Attendances;
 	let employeeAttendancesModalState = $state(false);
 	function employeeAttendancesModalToggle() {
 		if (!employeeAttendancesModalState) {
@@ -110,7 +79,7 @@
 		employeeAttendancesModalState = !employeeAttendancesModalState;
 	}
 
-	let employeeSchedulesModal: Schedules = $state();
+	let employeeSchedulesModal: Schedules = $state() as Schedules;
 	let employeeSchedulesModalState = $state(false);
 	function employeeSchedulesModalToggle() {
 		if (!employeeSchedulesModalState) {
@@ -119,7 +88,7 @@
 		employeeSchedulesModalState = !employeeSchedulesModalState;
 	}
 
-	let suspensionModal: Suspension = $state();
+	let suspensionModal: Suspension = $state() as Suspension;
 	let suspensionModalState = $state(false);
 	function suspensionModalToggle() {
 		if (!suspensionModalState) {
@@ -128,7 +97,7 @@
 		suspensionModalState = !suspensionModalState;
 	}
 
-	let monthAttendancesModal: MonthAttendances = $state();
+	let monthAttendancesModal: MonthAttendances = $state() as MonthAttendances;
 	let monthAttendancesModalState = $state(false);
 	function monthAttendancesModalToggle() {
 		if (!monthAttendancesModalState) {
@@ -137,7 +106,7 @@
 		monthAttendancesModalState = !monthAttendancesModalState
 	}
 
-	let loginModal: LoginAuth = $state();
+	let loginModal: LoginAuth = $state() as LoginAuth;
 	let loginModalState = $state(false)
 	function loginModalToggle() {
 		if (loginModalState && !authenticated) {
@@ -212,19 +181,19 @@
 					{:else}
 						{#each searchedEmployees as employee}
 							<tr>
-								<td>{employee.idNumber}</td>
-								<td>{employee.employeeType}</td>
-								<td>{employee.firstName}</td>
-								<td>{employee.middleName}</td>
-								<td>{employee.lastName}</td>
+								<td>{employee.IdNumber}</td>
+								<td>{employee.EmployeeType}</td>
+								<td>{employee.FirstName}</td>
+								<td>{employee.MiddleName}</td>
+								<td>{employee.LastName}</td>
 								<td style="width: 1%;">
 									<Dropdown style="width: 100%;">
 										<DropdownToggle outline color="primary" size="sm"><Icon name="three-dots" class="fw-bold" /></DropdownToggle>
 										<DropdownMenu>
-											<DropdownItem on:click={() => {selectEmployee(employee.idNumber); employeeAttendancesModalToggle();}} ><Icon name="card-list" /> Attendances</DropdownItem>
-											<DropdownItem on:click={() => {selectEmployee(employee.idNumber); employeeSchedulesModalToggle();}}><Icon name="calendar" /> Schedules</DropdownItem>
+											<DropdownItem on:click={() => {selectEmployee(employee.IdNumber); employeeAttendancesModalToggle();}} ><Icon name="card-list" /> Attendances</DropdownItem>
+											<DropdownItem on:click={() => {selectEmployee(employee.IdNumber); employeeSchedulesModalToggle();}}><Icon name="calendar" /> Schedules</DropdownItem>
 											<DropdownItem divider />
-											<DropdownItem on:click={() => {selectEmployee(employee.idNumber); removeEmployeeModalToggle();}} class="text-danger"><Icon name="trash" /> Remove</DropdownItem>
+											<DropdownItem on:click={() => {selectEmployee(employee.IdNumber); removeEmployeeModalToggle();}} class="text-danger"><Icon name="trash" /> Remove</DropdownItem>
 										</DropdownMenu>
 									</Dropdown>
 								</td>

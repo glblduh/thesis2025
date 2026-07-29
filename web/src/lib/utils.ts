@@ -78,20 +78,15 @@ export interface InfoAttendance {
 	Attendances: Attendance[]
 }
 
-export interface AllAttendances {
-	Faculty: InfoAttendance[]
-	Staff: InfoAttendance[]
-}
-
 export interface MonthAttendances {
 	SchoolYear: string
 	Date: DayDate
 	AttendancesEmpty: boolean
-	Attendances: AllAttendances
+	Attendances: InfoAttendance[]
 }
 
 export async function getSchedules(idNumber: number): Promise<ApiRes> {
-	let res = await fetch("/api/getallschedule/" + idNumber)
+	let res = await modFetch("/api/getallschedule/" + idNumber)
 	let jsonRes: ApiRes = await res.json();
 	return jsonRes;
 }
@@ -138,7 +133,7 @@ function getUserKey(): string {
 }
 
 function getCredentials(): string {
-	return getUsername() + ":" + getUserKey();
+	return getUsername() + ":" + getUserType() + ":" + getUserKey();
 }
 
 export function isAuthenticated(): boolean {

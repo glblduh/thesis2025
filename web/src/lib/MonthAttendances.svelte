@@ -91,35 +91,18 @@
 				<thead>
 					<tr>
 						<th scope="col" class="text-center">NAME</th>
+						<th scope="col" class="text-center">TYPE</th>
 						{#each {length: new Date(selectedDate.Year, selectedDate.Month, 0).getDate()}, day}
 							<th scope="col" class="text-center">{day+1}</th>
 						{/each}
 					</tr>
 				</thead>
 				<tbody>
-					{#each attendances.Attendances?.Faculty as attendance}
+					{#each attendances.Attendances as attendance}
 						{#if attendance.Attendances?.length != 0}
-							<tr class="table-primary">
+							<tr>
 								<td>{attendance.EmployeeInfo.LastName + ", " + attendance.EmployeeInfo.FirstName}</td>
-								{#each attendance.Attendances as dayAttendance}
-									<td>
-										<Badge color={badgeColor(dayAttendance.State)}>{dayAttendance.State}</Badge>
-										{#if dayAttendance.State == "ATTENDED"}
-											<Badge color="info">IN: {dayAttendance.TimeIn.Hour + ":" + dayAttendance.TimeIn.Minute}</Badge>
-											<Badge color="info">OUT: {dayAttendance.TimeOut.Hour + ":" + dayAttendance.TimeOut.Minute}</Badge>
-										{/if}
-										{#if dayAttendance.State == "NOOUT"}
-											<Badge color="info">IN: {dayAttendance.TimeIn.Hour + ":" + dayAttendance.TimeIn.Minute}</Badge>
-										{/if}
-									</td>
-								{/each}
-							</tr>
-						{/if}
-					{/each}
-					{#each attendances.Attendances?.Staff as attendance}
-						{#if attendance.Attendances?.length != 0}
-							<tr class="table-secondary">
-								<td>{attendance.EmployeeInfo.LastName + ", " + attendance.EmployeeInfo.FirstName}</td>
+								<td>{attendance.EmployeeInfo.EmployeeType}</td>
 								{#each attendance.Attendances as dayAttendance}
 									<td>
 										<Badge color={badgeColor(dayAttendance.State)}>{dayAttendance.State}</Badge>
