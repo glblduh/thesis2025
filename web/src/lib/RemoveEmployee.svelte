@@ -2,6 +2,7 @@
 	import "bootstrap/dist/css/bootstrap.min.css";
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
 	import { Button, Modal, ModalBody, ModalFooter } from "@sveltestrap/sveltestrap";
+	import { modFetch } from "./utils.ts"
 
 	let { isModalOpen, modalToggle, refreshList, idNumber } = $props();
 
@@ -13,7 +14,7 @@
 		let jsonBody: removeEmployeeBody = {
 			IdNumber: idNumber
 		}
-		let removeEmployeeRes = await fetch("/api/removeemployee", {method: "DELETE", body: JSON.stringify(jsonBody)});
+		let removeEmployeeRes = await modFetch("/api/removeemployee", {method: "DELETE", body: JSON.stringify(jsonBody)});
 		refreshList();
 		modalToggle();
 	}

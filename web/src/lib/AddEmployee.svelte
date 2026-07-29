@@ -2,6 +2,7 @@
 	import "bootstrap/dist/css/bootstrap.min.css";
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
 	import { Button, Form, FormGroup, Icon, Input, InputGroup, Modal, ModalBody } from "@sveltestrap/sveltestrap";
+    import { modFetch } from "./utils";
 
 	let { refreshList, isModalOpen, modalToggle } = $props();
 
@@ -58,7 +59,7 @@
 			LastName: lastName
 		};
 
-		let addEmployeeRes = await fetch("/api/addemployee", {method: "POST", body: JSON.stringify(jsonBody)})
+		let addEmployeeRes = await modFetch("/api/addemployee", {method: "POST", body: JSON.stringify(jsonBody)});
 		refreshList();
 		clearVars();
 	}

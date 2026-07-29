@@ -4,6 +4,7 @@
 	import 'bootstrap-icons/font/bootstrap-icons.css';
 	import { Button, Modal, ModalBody, FormGroup, Input, Table, InputGroup, Form, ModalFooter } from "@sveltestrap/sveltestrap";
 	import type { ApiRes, Schedule, SchoolYearRange, DayTimeRange } from "./utils";
+	import { modFetch } from "./utils.ts"
 
 	let { isModalOpen, modalToggle } = $props();
 
@@ -56,7 +57,7 @@
 			IdNumber: idNumber,
 			Schedule: schedules
 		};
-		let apiRes = await fetch("/api/updateschedule", {method: "POST", body: JSON.stringify(requestBody)});
+		let apiRes = await modFetch("/api/updateschedule", {method: "POST", body: JSON.stringify(requestBody)});
 		clearVars();
 	}
 </script>

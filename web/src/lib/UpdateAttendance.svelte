@@ -4,7 +4,7 @@
 	import 'bootstrap-icons/font/bootstrap-icons.css';
 	import { Button, Modal, ModalBody, FormGroup, Input, ModalFooter, InputGroup } from "@sveltestrap/sveltestrap";
 	import type { Attendance, Schedule } from "./utils";
-	import { monthsName } from "./utils";
+	import { monthsName, modFetch } from "./utils";
 
 	const defaultAttendance: Attendance = {
 		Date:{Year: 0, Month: 0, Day: 0},
@@ -74,7 +74,7 @@
 			IdNumber: selectedEmployee,
 			Attendance: attendance
 		};
-		await fetch("/api/updateattendance", {method: "POST", body: JSON.stringify(body)});
+		await modFetch("/api/updateattendance", {method: "POST", body: JSON.stringify(body)});
 		clearVars();
 	}
 </script>

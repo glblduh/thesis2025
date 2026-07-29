@@ -117,3 +117,37 @@ export function badgeColor(state: string): string {
 	}
 	return color;
 }
+
+export function logout() {
+	sessionStorage.removeItem("username");
+	sessionStorage.removeItem("usertype");
+	sessionStorage.removeItem("userkey");
+	window.location.reload();
+}
+
+export function getUsername(): string {
+	return sessionStorage.getItem("username") || "";
+}
+
+export function getUserType(): string {
+	return sessionStorage.getItem("usertype") || "";
+}
+
+function getUserKey(): string {
+	return sessionStorage.getItem("userkey") || "";
+}
+
+function getCredentials(): string {
+	return getUsername() + ":" + getUserKey();
+}
+
+export function isAuthenticated(): boolean {
+	return getUsername() != "" && getUserType() != "" && getUserKey() != "";
+}
+
+export async function modFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+	const modHeaders: HeadersInit = new Headers(init?.headers || {});
+	modHeaders.set("Authorization", getCredentials());
+
+	return fetch(input, { ...init, headers: modHeaders });
+}

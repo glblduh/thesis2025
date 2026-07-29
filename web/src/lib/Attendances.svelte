@@ -4,7 +4,7 @@
 	import 'bootstrap-icons/font/bootstrap-icons.css';
 	import { Button, Table, Modal, ModalBody, FormGroup, Input, ModalFooter, InputGroup, Badge, ButtonGroup, Icon } from "@sveltestrap/sveltestrap";
 	import type { AttendancesDates, DayDate, Attendance, ApiRes } from "./utils";
-    import { getSchedules, monthsName, badgeColor } from "./utils";
+    import { getSchedules, monthsName, badgeColor, modFetch } from "./utils";
     import UpdateAttendance from "./UpdateAttendance.svelte";
     import RemoveAttendance from "./RemoveAttendance.svelte";
     import { untrack } from "svelte";
@@ -49,7 +49,7 @@
 
 	async function getMonths() {
 		attendances = {} as Attendance[];
-		fetch("/api/getallattendancesmonths/" + selectedEmployee + "/" + selectedDate.Year).then((res) => {
+		modFetch("/api/getallattendancesmonths/" + selectedEmployee + "/" + selectedDate.Year).then((res) => {
 			res.json().then((resJson: AttendancesDates) => {
 				dates.Months = resJson.Months;
 			})
@@ -61,7 +61,7 @@
 			return
 		}
 
-		fetch("/api/getmonthattendances/" + selectedEmployee + "/" + selectedSchoolYear + "/" + selectedDate.Year + "/" + selectedDate.Month).then((res) => {
+		modFetch("/api/getmonthattendances/" + selectedEmployee + "/" + selectedSchoolYear + "/" + selectedDate.Year + "/" + selectedDate.Month).then((res) => {
 			res.json().then((resJson) => {
 				attendances = resJson.Attendances
 			})

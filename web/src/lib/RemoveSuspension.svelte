@@ -3,7 +3,7 @@
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
 	import 'bootstrap-icons/font/bootstrap-icons.css';
 	import { Button, Modal, ModalBody, ModalFooter } from "@sveltestrap/sveltestrap";
-    import { type DayDate } from "./utils";
+    import { type DayDate, modFetch } from "./utils";
 
 	let { isModalOpen, modalToggle } = $props();
 	let selectedDate = $state({}) as DayDate;
@@ -20,7 +20,7 @@
 		let body: ApiBody = {
 			Date: selectedDate
 		}
-		await fetch("/api/removesuspended", {method: "DELETE", body: JSON.stringify(body)});
+		await modFetch("/api/removesuspended", {method: "DELETE", body: JSON.stringify(body)});
 		modalToggle();
 	}
 </script>

@@ -3,7 +3,7 @@
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
 	import 'bootstrap-icons/font/bootstrap-icons.css';
 	import { Button, Table, Modal, ModalBody, Input, Form, Icon, FormGroup, InputGroup } from "@sveltestrap/sveltestrap";
-    import type { SuspendedDay, DayDate } from "./utils";
+    import { type SuspendedDay, type DayDate, modFetch } from "./utils";
     import RemoveSuspension from "./RemoveSuspension.svelte";
 
 	let { isModalOpen, modalToggle } = $props();
@@ -29,7 +29,7 @@
 	}
 
 	export async function init() {
-		let getAllSuspended = await fetch("/api/getallsuspended");
+		let getAllSuspended = await modFetch("/api/getallsuspended");
 		suspensions = await getAllSuspended.json();
 	}
 
@@ -49,7 +49,7 @@
 			Date: inputDateFormatted,
 			Type: inputType
 		};
-		await fetch("/api/updatesuspended", {method: "POST", body: JSON.stringify(body)});
+		await modFetch("/api/updatesuspended", {method: "POST", body: JSON.stringify(body)});
 		init();
 	}
 

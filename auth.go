@@ -202,6 +202,11 @@ func apiAuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		splittedUserKey := strings.Split(authHeader, ":")
+		if len(splittedUserKey) == 0 {
+			errorRes(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
 		keyValidateErr := validateKey(splittedUserKey[0], splittedUserKey[1])
 		if keyValidateErr != nil {
 			status := http.StatusUnauthorized

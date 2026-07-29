@@ -3,7 +3,7 @@
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
 	import 'bootstrap-icons/font/bootstrap-icons.css';
 	import { Button, Modal, ModalBody, ModalFooter } from "@sveltestrap/sveltestrap";
-    import { monthsName, type DayDate } from "./utils";
+    import { monthsName, type DayDate, modFetch } from "./utils";
 
 	let { isModalOpen, modalToggle } = $props();
 	let selectedEmployee: number = $state(0);
@@ -24,7 +24,7 @@
 			IdNumber: selectedEmployee,
 			Date: selectedDate
 		}
-		await fetch("/api/removeattendance", {method: "DELETE", body: JSON.stringify(body)});
+		await modFetch("/api/removeattendance", {method: "DELETE", body: JSON.stringify(body)});
 		modalToggle();
 	}
 </script>

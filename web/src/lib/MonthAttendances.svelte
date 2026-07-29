@@ -4,7 +4,7 @@
 	import 'bootstrap-icons/font/bootstrap-icons.css';
 	import { Button, Table, Modal, ModalBody, FormGroup, Input, ModalFooter, InputGroup, Badge, ButtonGroup } from "@sveltestrap/sveltestrap";
 	import type { DayDate, MonthAttendances } from "./utils";
-    import { monthsName, badgeColor } from "./utils";
+    import { monthsName, badgeColor, modFetch } from "./utils";
     import { untrack } from "svelte";
 
 	let { isModalOpen, modalToggle } = $props();
@@ -34,7 +34,7 @@
 	}
 
 	export async function getSchoolYears() {
-		fetch("/api/getallschoolyears").then((res) => {
+		modFetch("/api/getallschoolyears").then((res) => {
 			res.json().then((resJson) => {
 				schoolYears = resJson
 			})
@@ -47,7 +47,7 @@
 			return
 		}
 
-		fetch("/api/getallmonthattendances/" + selectedSchoolYear + "/" + selectedDate.Year + "/" + selectedDate.Month).then((res) => {
+		modFetch("/api/getallmonthattendances/" + selectedSchoolYear + "/" + selectedDate.Year + "/" + selectedDate.Month).then((res) => {
 			res.json().then((resJson) => {
 				attendances = resJson
 			})
