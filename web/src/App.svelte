@@ -109,9 +109,6 @@
 	let loginModal: LoginAuth = $state() as LoginAuth;
 	let loginModalState = $state(false)
 	function loginModalToggle() {
-		if (loginModalState && !authenticated) {
-			return
-		}
 		loginModalState = !loginModalState
 	}
 </script>

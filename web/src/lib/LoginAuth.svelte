@@ -24,13 +24,6 @@
 		formValidated = !formValidated;
 	}
 
-	function clearVars() {
-		formValidated = false;
-		login = {} as loginAuthBody;
-		status = 0;
-		modalToggle();
-	}
-
 	async function validateAuth(e: SubmitEvent) {
 		e.preventDefault();
 		status = 0;
@@ -47,12 +40,11 @@
 		sessionStorage.setItem("usertype", jsonRes.Type)
 		sessionStorage.setItem("userkey", jsonRes.Key);
 
-		clearVars();
 		window.location.reload();
 	}
 </script>
 
-<Modal body autoFocus isOpen={isModalOpen} toggle={clearVars} header="Login">
+<Modal body autoFocus isOpen={isModalOpen} header="Login">
 	<ModalBody>
 		<Alert fade isOpen={status != 0 && status != 200} color="warning">
 			{#if status == 404 }
