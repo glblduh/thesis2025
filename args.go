@@ -27,15 +27,15 @@ func checkArgs() {
 
 func argCreateUser(args []string) {
 	if len(args) < 4 {
-		Error.Println("to create a user, provide the following in order: usertype, username, password")
+		Error.Fatalln("to create a user, provide the following in order: usertype, username, password")
 	}
 
 	userType := strings.ToUpper(args[1])
 	username := args[2]
 	password := args[3]
 
-	if userType != string(FACULTY) && userType != string(STAFF) {
-		Error.Fatalln("provide a valid user type, faculty or staff")
+	if userType != string(FACULTY) && userType != string(STAFF) && userType != string(API) {
+		Error.Fatalln("provide a valid user type, faculty, staff, or api")
 	}
 
 	authCreateUser(username, password, UserType(userType))

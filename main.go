@@ -8,8 +8,8 @@ import (
 var svelteFiles embed.FS
 
 func main() {
-	checkArgs()
 	initializeDB()
 	initializeAuthDB()
+	checkArgs()
 	startHTTP()
 }

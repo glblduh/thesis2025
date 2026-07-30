@@ -74,10 +74,10 @@
 				</FormGroup>
 				<FormGroup floating label="Employee Type">
 					<Input placeholder="Employee Type" type="select" bind:value={employeeType}>
-						{#if getUserType() == "FACULTY"}
+						{#if getUserType() == "FACULTY" || getUserType() == "API"}
 							<option>Faculty</option>
 						{/if}
-						{#if getUserType() == "STAFF"}
+						{#if getUserType() == "STAFF" || getUserType() == "API"}
 							<option>Staff</option>
 						{/if}
 					</Input>

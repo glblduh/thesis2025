@@ -14,9 +14,6 @@ import (
 )
 
 const (
-	USERS_BUCKET = "Users"
-	USERS_PASSWORDS_BUCKET = "UsersPasswords"
-	USERS_API_BUCKET = "UsersAPIKeys"
 )
 
 func openAuthDB() (*bbolt.DB, error) {
@@ -212,7 +209,7 @@ func apiAuthMiddleware(next http.Handler) http.Handler {
 		userType := UserType(splittedUserKey[1])
 		userKey := splittedUserKey[2]
 
-		if userType != FACULTY && userType != STAFF && userType == API {
+		if userType != FACULTY && userType != STAFF && userType != API {
 			errorRes(w, ErrAuthInvalidUserType.Error(), http.StatusUnprocessableEntity)
 			return
 		}

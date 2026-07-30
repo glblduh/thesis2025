@@ -25,15 +25,15 @@ func initializeDB() {
 	defer db.Close()
 
 	db.Update(func(tx *bbolt.Tx) error {
-		_, facultyCreateErr := tx.CreateBucketIfNotExists([]byte("Faculty"))
+		_, facultyCreateErr := tx.CreateBucketIfNotExists([]byte(FACULTY))
 		if facultyCreateErr != nil {
 			Error.Fatalln("Faculty bucket creation error")
 		}
-		_, staffCreateErr := tx.CreateBucketIfNotExists([]byte("Staff"))
+		_, staffCreateErr := tx.CreateBucketIfNotExists([]byte(STAFF))
 		if staffCreateErr != nil {
 			Error.Fatalln("Staff bucket creation error")
 		}
-		_, suspendedCreateErr := tx.CreateBucketIfNotExists([]byte("Suspended"))
+		_, suspendedCreateErr := tx.CreateBucketIfNotExists([]byte(SUSPENDED))
 		if suspendedCreateErr != nil {
 			Error.Fatalln("Suspended bucket creation error")
 		}
@@ -50,9 +50,9 @@ func addEmployee(idNumber string, isFaculty bool, employeeStruct employee) error
 	}
 	defer db.Close()
 
-	employeeType := "Staff"
+	employeeType := STAFF
 	if isFaculty {
-		employeeType = "Faculty"
+		employeeType = FACULTY
 	}
 
 	return db.Update(func(tx *bbolt.Tx) error {
@@ -76,11 +76,11 @@ func addEmployee(idNumber string, isFaculty bool, employeeStruct employee) error
 		if employeeTypePutErr != nil {
 			return employeeTypePutErr
 		}
-		_, scheduleBucketErr := bucket.CreateBucketIfNotExists([]byte("Schedule"))
+		_, scheduleBucketErr := bucket.CreateBucketIfNotExists([]byte(SCHEDULE))
 		if scheduleBucketErr != nil {
 			return scheduleBucketErr
 		}
-		_, attendanceBucketErr := bucket.CreateBucketIfNotExists([]byte("Attendance"))
+		_, attendanceBucketErr := bucket.CreateBucketIfNotExists([]byte(ATTENDANCE))
 		if attendanceBucketErr != nil {
 			return attendanceBucketErr
 		}
@@ -120,7 +120,7 @@ func updateEmployeeSchedule(idNumber string, schedule employeeSchedule) error {
 	schoolYear := createSchoolYearString(schedule.SchoolYear.StartYear, schedule.SchoolYear.EndYear)
 
 	return db.Update(func(tx *bbolt.Tx) error {
-		scheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule"))
+		scheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte(SCHEDULE))
 		schoolYearBucket, schoolYearBucketErr := scheduleBucket.CreateBucketIfNotExists([]byte(schoolYear))
 		if schoolYearBucketErr != nil {
 			return schoolYearBucketErr
@@ -175,9 +175,9 @@ func getEmployee(idNumber string) (employee, error) {
 	}
 	defer db.Close()
 
-	employeeCheckErr := db.View(func(tx *bbolt.Tx) error {
-		staffBucket := tx.Bucket([]byte("Staff"))
-		facultyBucket := tx.Bucket([]byte("Faculty"))
+	return employeeStruct, db.View(func(tx *bbolt.Tx) error {
+		staffBucket := tx.Bucket([]byte(STAFF))
+		facultyBucket := tx.Bucket([]byte(FACULTY))
 
 		staffCheck := staffBucket.Bucket([]byte(idNumber))
 		facultyCheck := facultyBucket.Bucket([]byte(idNumber))
@@ -199,11 +199,6 @@ func getEmployee(idNumber string) (employee, error) {
 		employeeStruct = employeeInfoDBToStruct(facultyBucket.Bucket([]byte(idNumber)), idNumberInt, true)
 		return nil
 	})
-	if employeeCheckErr != nil {
-		return employeeStruct, employeeCheckErr
-	}
-
-	return employeeStruct, nil
 }
 
 func getEmployeeAllYearsSchedule(idNumber string) ([]employeeSchedule, error) {
@@ -221,7 +216,7 @@ func getEmployeeAllYearsSchedule(idNumber string) ([]employeeSchedule, error) {
 	defer db.Close()
 
 	scheduleIterateErr := db.View(func(tx *bbolt.Tx) error {
-		employeeScheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule"))
+		employeeScheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte(SCHEDULE))
 
 		cursor := employeeScheduleBucket.Cursor()
 
@@ -323,7 +318,7 @@ func updateAttendance(idNumber string, attendanceStruct attendance) error {
 	}
 
 	return db.Update(func(tx *bbolt.Tx) error {
-		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Attendance"))
+		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte(ATTENDANCE))
 
 		yearBucket, yearBucketErr := attendanceBucket.CreateBucketIfNotExists([]byte(strconv.Itoa(year)))
 		if yearBucketErr != nil {
@@ -390,10 +385,10 @@ func getAttendance(idNumber string, schoolYearString string, date dayDate) (atte
 	defer db.Close()
 
 	dbViewErr := db.View(func(tx *bbolt.Tx) error {
-		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Attendance"))
-		suspendedBucket := tx.Bucket([]byte("Suspended"))
+		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte(ATTENDANCE))
+		suspendedBucket := tx.Bucket([]byte(SUSPENDED))
 
-		schoolYearScheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule")).Bucket([]byte(schoolYearString))
+		schoolYearScheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte(SCHEDULE)).Bucket([]byte(schoolYearString))
 		if schoolYearScheduleBucket == nil {
 			return ErrSchoolYearNotFound
 		}
@@ -452,10 +447,10 @@ func getMonthAttendances(idNumber string, schoolYearString string, date dayDate)
 	defer db.Close()
 
 	return monthAttendances, db.View(func(tx *bbolt.Tx) error {
-		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Attendance"))
-		suspendedBucket := tx.Bucket([]byte("Suspended"))
+		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte(ATTENDANCE))
+		suspendedBucket := tx.Bucket([]byte(SUSPENDED))
 
-		schoolYearScheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule")).Bucket([]byte(schoolYearString))
+		schoolYearScheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte(SCHEDULE)).Bucket([]byte(schoolYearString))
 		if schoolYearScheduleBucket == nil {
 			return ErrSchoolYearNotFound
 		}
@@ -510,7 +505,7 @@ func getAllEmployees(faculty bool, staff bool) (allEmployees, error) {
 
 	dbViewErr := db.View(func(tx *bbolt.Tx) error {
 		if faculty {
-			facultyBucket := tx.Bucket([]byte("Faculty"))
+			facultyBucket := tx.Bucket([]byte(FACULTY))
 			facultyBucketCursor := facultyBucket.Cursor()
 			for facultyKey, _ := facultyBucketCursor.First(); facultyKey != nil; facultyKey, _ = facultyBucketCursor.Next() {
 				currentFacultyBucket := facultyBucket.Bucket(facultyKey)
@@ -524,7 +519,7 @@ func getAllEmployees(faculty bool, staff bool) (allEmployees, error) {
 		}
 
 		if staff {
-			staffBucket := tx.Bucket([]byte("Staff"))
+			staffBucket := tx.Bucket([]byte(STAFF))
 			staffBucketCursor := staffBucket.Cursor()
 			for staffKey, _ := staffBucketCursor.First(); staffKey != nil; staffKey, _ = staffBucketCursor.Next() {
 				currentStaffBucket := staffBucket.Bucket(staffKey)
@@ -559,7 +554,7 @@ func removeSchedule(idNumber string, schoolYear string) error {
 	defer db.Close()
 
 	return db.Update(func(tx *bbolt.Tx) error {
-		return tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule")).DeleteBucket([]byte(schoolYear))
+		return tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte(SCHEDULE)).DeleteBucket([]byte(schoolYear))
 	})
 }
 
@@ -578,7 +573,7 @@ func getAttendancesDates(idNumber string, date dayDate) (attendanceDates, error)
 	defer db.Close()
 
 	dbViewErr := db.View(func(tx *bbolt.Tx) error {
-		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Attendance"))
+		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte(ATTENDANCE))
 
 		if date.Year != 0 {
 			yearString := strconv.Itoa(date.Year)
@@ -673,7 +668,7 @@ func removeAttendance(idNumber string, date dayDate) error {
 	}
 
 	return db.Update(func(tx *bbolt.Tx) error {
-		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Attendance"))
+		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte(ATTENDANCE))
 
 		yearBucket := attendanceBucket.Bucket([]byte(strconv.Itoa(date.Year)))
 		if yearBucket == nil {
@@ -723,8 +718,8 @@ func checkAndAttend(idNumber string) (attend, error) {
 	defer db.Close()
 
 	return attend, db.Update(func(tx *bbolt.Tx) error {
-		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Attendance"))
-		scheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte("Schedule"))
+		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte(ATTENDANCE))
+		scheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte(SCHEDULE))
 
 		_, currentSchoolYearString, getSchoolYearErr := getLatestSchoolYear(scheduleBucket)
 		if getSchoolYearErr != nil {
@@ -809,7 +804,7 @@ func updateSuspended(date dayDate, suspensionType SuspensionType) error {
 	defer db.Close()
 
 	return db.Update(func(tx *bbolt.Tx) error {
-		suspendedBucket := tx.Bucket([]byte("Suspended"))
+		suspendedBucket := tx.Bucket([]byte(SUSPENDED))
 		if suspendedBucket == nil {
 			return ErrSuspendedBucketNotFound
 		}
@@ -848,7 +843,7 @@ func removeSuspended(date dayDate) error {
 	defer db.Close()
 
 	return db.Update(func(tx *bbolt.Tx) error {
-		suspendedBucket := tx.Bucket([]byte("Suspended"))
+		suspendedBucket := tx.Bucket([]byte(SUSPENDED))
 		if suspendedBucket == nil {
 			return ErrSuspendedBucketNotFound
 		}
@@ -896,7 +891,7 @@ func getAllSuspended() ([]suspendedDay, error) {
 	defer db.Close()
 
 	return allSuspensions, db.View(func(tx *bbolt.Tx) error {
-		suspendedBucket := tx.Bucket([]byte("Suspended"))
+		suspendedBucket := tx.Bucket([]byte(SUSPENDED))
 		if suspendedBucket == nil {
 			return ErrSuspendedBucketNotFound
 		}
@@ -942,11 +937,11 @@ func getAllSchoolYears(faculty bool, staff bool) ([]string, error) {
 
 	dbViewErr := db.View(func(tx *bbolt.Tx) error {
 		if faculty {
-			allSchoolYears = append(allSchoolYears, getSchoolYearIteration(tx.Bucket([]byte("Faculty")))...)
+			allSchoolYears = append(allSchoolYears, getSchoolYearIteration(tx.Bucket([]byte(FACULTY)))...)
 		}
 
 		if staff {
-			allSchoolYears = append(allSchoolYears, getSchoolYearIteration(tx.Bucket([]byte("Staff")))...)
+			allSchoolYears = append(allSchoolYears, getSchoolYearIteration(tx.Bucket([]byte(STAFF)))...)
 		}
 
 		return nil

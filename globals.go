@@ -45,6 +45,8 @@ type AttendanceState string
 type AttendState     string
 type SuspensionType  string
 type UserType        string
+type BucketNames     string
+type AuthBucketNames     string
 
 const (
 	DAYOFF     AttendanceState = "DAYOFF"
@@ -63,6 +65,14 @@ const (
 	FACULTY UserType = "FACULTY"
 	STAFF   UserType = "STAFF"
 	API   UserType = "API"
+
+	SCHEDULE BucketNames = "SCHEDULE"
+	ATTENDANCE BucketNames = "ATTENDANCE"
+	SUSPENDED BucketNames = "SUSPENDED"
+
+	USERS_BUCKET AuthBucketNames = "USERS"
+	USERS_PASSWORDS_BUCKET AuthBucketNames = "USERSPASSWORDS"
+	USERS_API_BUCKET AuthBucketNames = "USERSAPIKEYS"
 )
 
 type (

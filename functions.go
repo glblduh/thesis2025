@@ -91,12 +91,12 @@ func dayScheduleDBToStruct(dayKey []byte, dayValue []byte, currentYearSchedule *
 	return nil
 }
 
-func checkIfFaculty(employeeType string) (bool, error) {
+func checkIfFaculty(employeeType UserType) (bool, error) {
 	var isFaculty bool
-	switch strings.ToLower(employeeType) {
-	case "staff":
+	switch employeeType {
+	case STAFF:
 		isFaculty = false
-	case "faculty":
+	case FACULTY:
 		isFaculty = true
 	default:
 		return false, ErrInvalidEmployeeType
@@ -280,7 +280,7 @@ func getSchoolYearIteration(typeBucket *bbolt.Bucket) []string {
 
 	bucketCursor := typeBucket.Cursor()
 	for currentKey, _ := bucketCursor.First(); currentKey != nil; currentKey, _ = bucketCursor.Next() {
-		currentSchedulesBucketCursor := typeBucket.Bucket(currentKey).Bucket([]byte("Schedule")).Cursor()
+		currentSchedulesBucketCursor := typeBucket.Bucket(currentKey).Bucket([]byte(SCHEDULE)).Cursor()
 		for currentSchoolYear, _ := currentSchedulesBucketCursor.First(); currentSchoolYear != nil; currentSchoolYear, _ = currentSchedulesBucketCursor.Next() {
 			schoolYears = append(schoolYears, string(currentSchoolYear))
 		}
