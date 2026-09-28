@@ -56,12 +56,12 @@ export interface Attendance {
 	State: string
 	TimeIn: AttendanceTime
 	TimeOut: AttendanceTime
-	Suspended: string
+	Suspended: string[]
 }
 
 export interface SuspendedDay {
 	Date: DayDate
-	Type: string
+	Type: string[]
 }
 
 export interface EmployeeInfo {

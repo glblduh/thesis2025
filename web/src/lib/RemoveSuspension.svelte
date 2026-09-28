@@ -7,27 +7,31 @@
 
 	let { isModalOpen, modalToggle } = $props();
 	let selectedDate = $state({}) as DayDate;
+	let selectedType = $state("") as string;
 
-	export function init(date: DayDate) {
+	export function init(date: DayDate, suspensionType: string) {
 		selectedDate = date;
+		selectedType = suspensionType;
 	}
 
 	interface ApiBody {
 		Date: DayDate
+		Type: string
 	}
 
 	async function removeSuspended() {
 		let body: ApiBody = {
-			Date: selectedDate
+			Date: selectedDate,
+			Type: selectedType
 		}
 		await modFetch("/api/removesuspended", {method: "DELETE", body: JSON.stringify(body)});
 		modalToggle();
 	}
 </script>
 
-<Modal isOpen={isModalOpen} toggle={modalToggle} header="Remove Suspension">
+<Modal isOpen={isModalOpen} toggle={modalToggle} header="Remove Event">
 	<ModalBody>
-		Are you sure to remove the suspension on <span class="fw-bold">{selectedDate.Month}/{selectedDate.Day}/{selectedDate.Year}</span>? This action is irreversible.
+		Are you sure to remove the suspension <span class="fw-bold">{selectedType}</span> on <span class="fw-bold">{selectedDate.Month}/{selectedDate.Day}/{selectedDate.Year}</span>? This action is irreversible.
 	</ModalBody>
 	<ModalFooter>
 		<Button outline color="secondary" on:click={modalToggle}>Back</Button>

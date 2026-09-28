@@ -15,7 +15,7 @@ func encodeRes(w http.ResponseWriter, v any) error {
 	w.Header().Add("Content-Type", "application/json")
 	err := json.NewEncoder(w).Encode(v)
 	if err != nil {
-		errorRes(w, "JSON Encoder error: " + err.Error(), http.StatusInternalServerError)
+		errorRes(w, "JSON Encoder error: "+err.Error(), http.StatusInternalServerError)
 	}
 	return err
 }
@@ -33,7 +33,7 @@ func errorRes(w http.ResponseWriter, errorResponse string, code int) {
 func decodeBody(w http.ResponseWriter, body io.Reader, v any, noRes bool) error {
 	err := json.NewDecoder(body).Decode(v)
 	if err != nil && !noRes {
-		errorRes(w, "JSON Decoder error: " + err.Error(), http.StatusInternalServerError)
+		errorRes(w, "JSON Decoder error: "+err.Error(), http.StatusInternalServerError)
 	}
 	return err
 }
@@ -201,7 +201,7 @@ func getDaySchedule(schoolYear schoolYearRange, date dayDate, scheduleBucket *bb
 	return daySchedule, nil
 }
 
-func createAttendanceStruct(attendanceDayBucket *bbolt.Bucket, date dayDate, daySchedule dayTimeRange, suspended SuspensionType) (attendance, error) {
+func createAttendanceStruct(attendanceDayBucket *bbolt.Bucket, date dayDate, daySchedule dayTimeRange, suspended []SuspensionType) (attendance, error) {
 	attendanceStruct := attendance{}
 	attendanceStruct.Date = date
 	attendanceStruct.Suspended = suspended
@@ -253,8 +253,8 @@ func checkIfBucketEmpty(bucket *bbolt.Bucket) bool {
 	return first == nil
 }
 
-func getDateSuspension(suspendedBucket *bbolt.Bucket, date dayDate) SuspensionType {
-	suspensionType := SuspensionType(NOTSUSPENDED)
+func getDateSuspension(suspendedBucket *bbolt.Bucket, date dayDate) ([]SuspensionType, error) {
+	suspensionType := []SuspensionType{}
 
 	yearBucket := suspendedBucket.Bucket([]byte(strconv.Itoa(date.Year)))
 
@@ -269,10 +269,14 @@ func getDateSuspension(suspendedBucket *bbolt.Bucket, date dayDate) SuspensionTy
 	}
 
 	if dayBucket != nil {
-		suspensionType = SuspensionType((dayBucket.Get([]byte("TYPE"))))
+		_, getAllDaySuspensions, getAllDaySuspensionTypesErr := getAllDaySuspensionTypes(dayBucket)
+		if getAllDaySuspensionTypesErr != nil {
+			return suspensionType, getAllDaySuspensionTypesErr
+		}
+		suspensionType = getAllDaySuspensions
 	}
 
-	return suspensionType
+	return suspensionType, nil
 }
 
 func getSchoolYearIteration(typeBucket *bbolt.Bucket) []string {
@@ -289,7 +293,7 @@ func getSchoolYearIteration(typeBucket *bbolt.Bucket) []string {
 	return schoolYears
 }
 
-func getContextUserType(w http.ResponseWriter, r *http.Request) (UserType, error){
+func getContextUserType(w http.ResponseWriter, r *http.Request) (UserType, error) {
 	rawUserType := r.Context().Value("userType")
 	userType, assertOk := rawUserType.(UserType)
 
@@ -314,4 +318,22 @@ func accessTypeIDMatch(w http.ResponseWriter, accessType UserType, idNumber int)
 	}
 
 	return nil
+}
+
+func getAllDaySuspensionTypes(dayBucket *bbolt.Bucket) (dayDate, []SuspensionType, error) {
+	date := dayDate{}
+	daySuspensionTypes := []SuspensionType{}
+
+	dayBucketCursor := dayBucket.Cursor()
+	for suspensionType, dateByte := dayBucketCursor.First(); suspensionType != nil; suspensionType, dateByte = dayBucketCursor.Next() {
+		if date == (dayDate{}) {
+			dateUnmarshalErr := json.Unmarshal(dateByte, &date)
+			if dateUnmarshalErr != nil {
+				return date, daySuspensionTypes, dateUnmarshalErr
+			}
+		}
+		daySuspensionTypes = append(daySuspensionTypes, SuspensionType(string(suspensionType)))
+	}
+
+	return date, daySuspensionTypes, nil
 }

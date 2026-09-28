@@ -417,8 +417,13 @@ func getAttendance(idNumber string, schoolYearString string, date dayDate) (atte
 			return unmarshalErr
 		}
 
+		dayAllSuspensions, getDateSuspensionErr := getDateSuspension(suspendedBucket, date)
+		if getDateSuspensionErr != nil {
+			return getDateSuspensionErr
+		}
+
 		var createAttendanceErr error
-		attendanceStruct, createAttendanceErr = createAttendanceStruct(dayBucket, date, dayScheduleStruct, getDateSuspension(suspendedBucket, date))
+		attendanceStruct, createAttendanceErr = createAttendanceStruct(dayBucket, date, dayScheduleStruct, dayAllSuspensions)
 		if createAttendanceErr != nil {
 			return createAttendanceErr
 		}
@@ -478,12 +483,17 @@ func getMonthAttendances(idNumber string, schoolYearString string, date dayDate)
 			}
 
 			iterationDate := dayDate{
-				Year: date.Year,
+				Year:  date.Year,
 				Month: date.Month,
-				Day: i,
+				Day:   i,
 			}
 
-			dayAttendance, createAttendanceErr := createAttendanceStruct(dayBucket, iterationDate, dayScheduleStruct, getDateSuspension(suspendedBucket, iterationDate))
+			dayAllSuspensions, getDateSuspensionErr := getDateSuspension(suspendedBucket, iterationDate)
+			if getDateSuspensionErr != nil {
+				return getDateSuspensionErr
+			}
+
+			dayAttendance, createAttendanceErr := createAttendanceStruct(dayBucket, iterationDate, dayScheduleStruct, dayAllSuspensions)
 			if createAttendanceErr != nil {
 				return createAttendanceErr
 			}
@@ -766,9 +776,9 @@ func checkAndAttend(idNumber string) (attend, error) {
 		}
 
 		currentTimeStruct := attendanceTime{
-			Hour: currentTime.Hour(),
+			Hour:   currentTime.Hour(),
 			Minute: currentTime.Minute(),
-			Unix: int(currentTime.Unix()),
+			Unix:   int(currentTime.Unix()),
 		}
 		currentTimeByte, marshalErr := json.Marshal(currentTimeStruct)
 		if marshalErr != nil {
@@ -828,14 +838,13 @@ func updateSuspended(date dayDate, suspensionType SuspensionType) error {
 		if dateMarshalErr != nil {
 			return dateMarshalErr
 		}
-		dayBucket.Put([]byte("DATE"), dateByte)
-		dayBucket.Put([]byte("TYPE"), []byte(suspensionType))
+		dayBucket.Put([]byte(suspensionType), dateByte)
 
 		return nil
 	})
 }
 
-func removeSuspended(date dayDate) error {
+func removeSuspended(date dayDate, removeType SuspensionType) error {
 	db, dbErr := openDB()
 	if dbErr != nil {
 		return dbErr
@@ -858,9 +867,21 @@ func removeSuspended(date dayDate) error {
 			return ErrMonthBucketNotFound
 		}
 
-		removeDayErr := monthBucket.DeleteBucket([]byte(strconv.Itoa(date.Day)))
-		if removeDayErr != nil {
-			return removeDayErr
+		dayBucket := monthBucket.Bucket([]byte(strconv.Itoa(date.Day)))
+		if dayBucket == nil {
+			return ErrDayBucketNotFound
+		}
+
+		removeTypeErr := dayBucket.Delete([]byte(removeType))
+		if removeTypeErr != nil {
+			return removeTypeErr
+		}
+
+		if checkIfBucketEmpty(dayBucket) {
+			removeDayErr := monthBucket.DeleteBucket([]byte(strconv.Itoa(date.Day)))
+			if removeDayErr != nil {
+				return removeDayErr
+			}
 		}
 
 		if checkIfBucketEmpty(monthBucket) {
@@ -908,15 +929,14 @@ func getAllSuspended() ([]suspendedDay, error) {
 				for day, _ := monthBucketCursor.First(); day != nil; day, _ = monthBucketCursor.Next() {
 					dayBucket := monthBucket.Bucket(day)
 
-					date := dayDate{}
-					dateUnmarshalErr := json.Unmarshal(dayBucket.Get([]byte("DATE")), &date)
-					if dateUnmarshalErr != nil {
-						return dateUnmarshalErr
+					date, allSuspensionTypes, getAllDaySuspensionTypesErr := getAllDaySuspensionTypes(dayBucket)
+					if getAllDaySuspensionTypesErr != nil {
+						return getAllDaySuspensionTypesErr
 					}
 
 					allSuspensions = append(allSuspensions, suspendedDay{
 						Date: date,
-						Type: SuspensionType(string(dayBucket.Get([]byte("TYPE")))),
+						Type: allSuspensionTypes,
 					})
 				}
 			}

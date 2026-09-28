@@ -1,10 +1,10 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"os"
 	"time"
-	"errors"
 )
 
 var (
@@ -15,64 +15,65 @@ var (
 
 var (
 	ErrYearNoSchoolYear = errors.New("current year does not belong to any registered school year")
-	ErrDayOff = errors.New("day off")
-	ErrDayComplete = errors.New("attendance for today is already completed")
+	ErrDayOff           = errors.New("day off")
+	ErrDayComplete      = errors.New("attendance for today is already completed")
 
-	ErrIdNumberNotFound = errors.New("id number not found")
+	ErrIdNumberNotFound    = errors.New("id number not found")
 	ErrInvalidEmployeeType = errors.New("not a valid employee type")
 
 	ErrSchoolYearNotFound = errors.New("school year not found")
-	ErrYearNotFound = errors.New("year not found")
-	ErrMonthNotFound = errors.New("month not found")
-	ErrDayNotFound = errors.New("day not found")
+	ErrYearNotFound       = errors.New("year not found")
+	ErrMonthNotFound      = errors.New("month not found")
+	ErrDayNotFound        = errors.New("day not found")
 
-	ErrInvalidDate = errors.New("invalid date")
+	ErrInvalidDate  = errors.New("invalid date")
 	ErrInvalidMonth = errors.New("invalid month")
-	ErrInvalidDay = errors.New("invalid day")
+	ErrInvalidDay   = errors.New("invalid day")
 
 	ErrSuspendedBucketNotFound = errors.New("suspended bucket not found")
-	ErrYearBucketNotFound = errors.New("year bucket not found")
-	ErrMonthBucketNotFound = errors.New("month bucket not found")
+	ErrYearBucketNotFound      = errors.New("year bucket not found")
+	ErrMonthBucketNotFound     = errors.New("month bucket not found")
+	ErrDayBucketNotFound       = errors.New("day bucket not found")
 
-	ErrAuthUserNotFound = errors.New("user not found")
-	ErrAuthKeyIncorrect = errors.New("auth key is incorrect")
-	ErrAuthUnauthorized = errors.New("unauthorized")
+	ErrAuthUserNotFound    = errors.New("user not found")
+	ErrAuthKeyIncorrect    = errors.New("auth key is incorrect")
+	ErrAuthUnauthorized    = errors.New("unauthorized")
 	ErrAuthInvalidUserType = errors.New("invalid user type")
-	ErrAuthForbidden = errors.New("request forbidden")
+	ErrAuthForbidden       = errors.New("request forbidden")
 )
 
 type AttendanceState string
-type AttendState     string
-type SuspensionType  string
-type UserType        string
-type BucketNames     string
-type AuthBucketNames     string
+type AttendState string
+type SuspensionType string
+type UserType string
+type BucketNames string
+type AuthBucketNames string
 
 const (
-	DAYOFF     AttendanceState = "DAYOFF"
-	LEAVE      AttendanceState = "LEAVE"
-	ATTENDED   AttendanceState = "ATTENDED"
-	NOOUT      AttendanceState = "NOOUT"
-	ABSENT     AttendanceState = "ABSENT"
+	DAYOFF   AttendanceState = "DAYOFF"
+	LEAVE    AttendanceState = "LEAVE"
+	ATTENDED AttendanceState = "ATTENDED"
+	NOOUT    AttendanceState = "NOOUT"
+	ABSENT   AttendanceState = "ABSENT"
 
-	TIMEIN     AttendState     = "TIMEIN"
-	TIMEOUT    AttendState     = "TIMEOUT"
+	TIMEIN  AttendState = "TIMEIN"
+	TIMEOUT AttendState = "TIMEOUT"
 
-	NOTSUSPENDED SuspensionType = "NOTSUSPENDED"
-	SUSPENSION   SuspensionType = "SUSPENSION"
-	HOLIDAY      SuspensionType = "HOLIDAY"
+	SUSPENSION  SuspensionType = "SUSPENSION"
+	HOLIDAY     SuspensionType = "HOLIDAY"
+	EXAMINATION SuspensionType = "EXAMINATION"
 
 	FACULTY UserType = "FACULTY"
 	STAFF   UserType = "STAFF"
-	API   UserType = "API"
+	API     UserType = "API"
 
-	SCHEDULE BucketNames = "SCHEDULE"
+	SCHEDULE   BucketNames = "SCHEDULE"
 	ATTENDANCE BucketNames = "ATTENDANCE"
-	SUSPENDED BucketNames = "SUSPENDED"
+	SUSPENDED  BucketNames = "SUSPENDED"
 
-	USERS_BUCKET AuthBucketNames = "USERS"
+	USERS_BUCKET           AuthBucketNames = "USERS"
 	USERS_PASSWORDS_BUCKET AuthBucketNames = "USERSPASSWORDS"
-	USERS_API_BUCKET AuthBucketNames = "USERSAPIKEYS"
+	USERS_API_BUCKET       AuthBucketNames = "USERSAPIKEYS"
 )
 
 type (
@@ -120,7 +121,7 @@ type (
 		State     AttendanceState
 		TimeIn    attendanceTime
 		TimeOut   attendanceTime
-		Suspended SuspensionType
+		Suspended []SuspensionType
 	}
 
 	dayDate struct {
@@ -142,25 +143,25 @@ type (
 
 	suspendedDay struct {
 		Date dayDate
-		Type SuspensionType
+		Type []SuspensionType
 	}
 
 	monthAttendances struct {
 		EmployeeInfo employee
-		Attendances []attendance
+		Attendances  []attendance
 	}
 
 	attend struct {
-		State AttendState
+		State      AttendState
 		SchoolYear string
-		Date dayDate
-		Time attendanceTime
+		Date       dayDate
+		Time       attendanceTime
 	}
 
 	userAuth struct {
 		Username string
-		Type UserType
-		Key string
+		Type     UserType
+		Key      string
 	}
 )
 
@@ -197,13 +198,13 @@ type (
 	}
 
 	apiUpdateAttendanceBodyRes struct {
-		IdNumber       int
-		Attendance     attendance
+		IdNumber   int
+		Attendance attendance
 	}
 
 	apiGetAttendanceBody struct {
-		IdNumber   int
-		Date       dayDate
+		IdNumber int
+		Date     dayDate
 	}
 
 	apiGetAttendanceRes struct {
@@ -224,16 +225,16 @@ type (
 	}
 
 	apiRemoveAttendanceBodyRes struct {
-		IdNumber   int
-		Date       dayDate
+		IdNumber int
+		Date     dayDate
 	}
 
 	apiAttendRes struct {
-		IdNumber int
-		State    AttendState
+		IdNumber   int
+		State      AttendState
 		SchoolYear string
-		Date dayDate
-		Time     attendanceTime
+		Date       dayDate
+		Time       attendanceTime
 	}
 
 	apiAddSuspendedBodyRes struct {
@@ -243,18 +244,19 @@ type (
 
 	apiRemoveSuspendedBodyRes struct {
 		Date dayDate
+		Type SuspensionType
 	}
 
 	apiGetAllMonthAttendancesRes struct {
-		SchoolYear string
-		Date dayDate
+		SchoolYear       string
+		Date             dayDate
 		AttendancesEmpty bool
-		Attendances []monthAttendances
+		Attendances      []monthAttendances
 	}
 
 	apiGetAllSchoolYearsBody struct {
 		Faculty bool
-		Staff bool
+		Staff   bool
 	}
 
 	apiUserAuthBody struct {

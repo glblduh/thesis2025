@@ -146,7 +146,7 @@
 						<div class="h-100 d-flex align-items-center justify-content-center justify-content-md-end">
 							<ButtonGroup size="sm" class="shadow">
 								<Button outline color="primary" on:click={monthAttendancesModalToggle}><Icon name="list-columns-reverse" class="fw-bold" /> All Attendances</Button>
-								<Button outline color="primary" on:click={suspensionModalToggle}><Icon name="calendar-plus" class="fw-bold" /> Add Suspension</Button>
+								<Button outline color="primary" on:click={suspensionModalToggle}><Icon name="calendar-plus" class="fw-bold" /> Add Event</Button>
 								<Button outline color="primary" on:click={addEmployeeModalToggle}><Icon name="person-plus" class="fw-bold" /> Add Employee</Button>
 								<Button outline color="primary" on:click={parseEmployees}><Icon name="arrow-clockwise" class="fw-bold" /> Refresh</Button>
 							</ButtonGroup>

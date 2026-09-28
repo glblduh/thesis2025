@@ -292,9 +292,9 @@ func apiGetAttendance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	employeeAttendance, getAttendanceErr := getAttendance(idNumber, schoolYear, dayDate{
-		Year: yearInt,
+		Year:  yearInt,
 		Month: monthInt,
-		Day: dayInt,
+		Day:   dayInt,
 	})
 	if getAttendanceErr != nil {
 		errorRes(w, getAttendanceErr.Error(), http.StatusInternalServerError)
@@ -361,7 +361,7 @@ func apiGetMonthAttendances(w http.ResponseWriter, r *http.Request) {
 	}
 
 	employeeMonthAttendances, getMonthAttendancesErr := getMonthAttendances(idNumber, schoolYear, dayDate{
-		Year: yearInt,
+		Year:  yearInt,
 		Month: monthInt,
 	})
 	if getMonthAttendancesErr != nil {
@@ -416,7 +416,7 @@ func apiRemoveSchedule(w http.ResponseWriter, r *http.Request) {
 	encodeRes(w, body)
 }
 
-func apiGetAttendancesDates(w http.ResponseWriter, r*http.Request) {
+func apiGetAttendancesDates(w http.ResponseWriter, r *http.Request) {
 	userType, getUserTypeErr := getContextUserType(w, r)
 	if getUserTypeErr != nil {
 		return
@@ -518,11 +518,11 @@ func apiAttend(w http.ResponseWriter, r *http.Request) {
 	}
 
 	encodeRes(w, apiAttendRes{
-		IdNumber: idNumberInt,
-		State: attend.State,
+		IdNumber:   idNumberInt,
+		State:      attend.State,
 		SchoolYear: attend.SchoolYear,
-		Date: attend.Date,
-		Time: attend.Time,
+		Date:       attend.Date,
+		Time:       attend.Time,
 	})
 }
 
@@ -547,7 +547,7 @@ func apiRemoveSuspended(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	removeSuspendedErr := removeSuspended(body.Date)
+	removeSuspendedErr := removeSuspended(body.Date, body.Type)
 	if removeSuspendedErr != nil {
 		errorRes(w, removeSuspendedErr.Error(), http.StatusInternalServerError)
 		return
@@ -604,7 +604,7 @@ func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
 	}
 
 	date := dayDate{
-		Year: yearInt,
+		Year:  yearInt,
 		Month: monthInt,
 	}
 
@@ -636,7 +636,7 @@ func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
 
 		res.Attendances = append(res.Attendances, monthAttendances{
 			EmployeeInfo: currentFaculty,
-			Attendances: currentFacultyAttendances,
+			Attendances:  currentFacultyAttendances,
 		})
 	}
 
@@ -655,7 +655,7 @@ func apiGetAllMonthAttendances(w http.ResponseWriter, r *http.Request) {
 
 		res.Attendances = append(res.Attendances, monthAttendances{
 			EmployeeInfo: currentStaff,
-			Attendances: currentStaffAttendances,
+			Attendances:  currentStaffAttendances,
 		})
 	}
 
@@ -675,7 +675,7 @@ func apiGetAllSchoolYears(w http.ResponseWriter, r *http.Request) {
 		body.Faculty = true
 		body.Staff = true
 	} else {
-		errorRes(w, "JSON Decoder error: " + decodeErr.Error(), http.StatusInternalServerError)
+		errorRes(w, "JSON Decoder error: "+decodeErr.Error(), http.StatusInternalServerError)
 		return
 	}
 

@@ -135,9 +135,9 @@
 						<tr>
 							<td class="text-center fw-bold">{attendance.Date.Day}</td>
 							<td class="text-center fw-bold">
-								{#if attendance.Suspended != "NOTSUSPENDED" }
-									<Badge color="info">{attendance.Suspended}</Badge>
-								{/if}
+								{#each attendance.Suspended as suspensionType }
+									<Badge color="info">{suspensionType}</Badge>
+								{/each}
 								<Badge color={badgeColor(attendance.State)}>{attendance.State}</Badge>
 							</td>
 							<td class="text-center">{attendance.TimeIn.Hour}</td>

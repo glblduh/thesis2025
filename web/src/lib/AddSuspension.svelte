@@ -63,15 +63,16 @@
 
 <RemoveSuspension bind:this={removeSuspensionModal} isModalOpen={removeSuspensionModalState} modalToggle={removeSuspensionModalToggle} />
 
-<Modal isOpen={isModalOpen} toggle={clearVars} header="Suspensions">
+<Modal isOpen={isModalOpen} toggle={clearVars} header="Events">
 	<ModalBody>
 		<Form validated={formValidated} on:submit={updateSuspended}>
 			<InputGroup>
 				<FormGroup floating label="Date">
 					<Input type="date" required bind:value={inputDateString} placeholder="date placeholder"/>
 				</FormGroup>
-				<FormGroup floating label="Suspension Type">
+				<FormGroup floating label="Event Type">
 					<Input type="select" bind:value={inputType}>
+						<option value="EXAMINATION">EXAMINATION</option>
 						<option value="SUSPENSION">SUSPENSION</option>
 						<option value="HOLIDAY">HOLIDAY</option>
 					</Input>
@@ -93,18 +94,20 @@
 						<th scope="col"></th>
 					</tr>
 					{#each suspensions as suspension }
-						<tr>
-							<td>{suspension.Date.Year}</td>
-							<td>{suspension.Date.Month}</td>
-							<td>{suspension.Date.Day}</td>
-							<td>{suspension.Type}</td>
-							<td style="width: 1%;">
-								<Button outline color="danger" on:click={() => {
-								removeSuspensionModal.init(suspension.Date);
-								removeSuspensionModalToggle();
-								}} style="width: 100%;"><Icon name="trash" /></Button>
-							</td>
-						</tr>
+						{#each suspension.Type as suspensionType}
+							<tr>
+								<td>{suspension.Date.Year}</td>
+								<td>{suspension.Date.Month}</td>
+								<td>{suspension.Date.Day}</td>
+								<td>{suspensionType}</td>
+								<td style="width: 1%;">
+									<Button outline color="danger" on:click={() => {
+									removeSuspensionModal.init(suspension.Date, suspensionType);
+									removeSuspensionModalToggle();
+									}} style="width: 100%;"><Icon name="trash" /></Button>
+								</td>
+							</tr>
+						{/each}
 					{/each}
 				</thead>
 			</Table>
