@@ -2,16 +2,17 @@
 	import "bootstrap/dist/css/bootstrap.min.css";
 	import "bootstrap/dist/js/bootstrap.bundle.min.js";
 	import 'bootstrap-icons/font/bootstrap-icons.css';
-	import { Button, Modal, ModalBody, FormGroup, Input, ModalFooter, InputGroup } from "@sveltestrap/sveltestrap";
-	import type { Attendance, Schedule } from "./utils";
+	import { Button, Modal, ModalBody, FormGroup, Input, ModalFooter, InputGroup, Row, Col } from "@sveltestrap/sveltestrap";
+	import type { Attendance, getUserType, Schedule } from "./utils";
 	import { monthsName, modFetch } from "./utils";
 
 	const defaultAttendance: Attendance = {
 		Date:{Year: 0, Month: 0, Day: 0},
 		State: "",
+		Reason: "",
 		TimeIn: {Hour: 0, Minute: 0},
 		TimeOut: {Hour: 0, Minute: 0},
-		Suspended: ""
+		Suspended: []
 	};
 
 	let { isModalOpen, modalToggle } = $props();
@@ -143,7 +144,19 @@
 				</Input>
 			</FormGroup>
 		</InputGroup>
-		<Input disabled={attendance.Date.Day==0} type="switch" label="Leave?" bind:checked={isLeave} />
+		<Row>
+			<Col>
+				<Input disabled={attendance.Date.Day==0} type="switch" label="Leave?" bind:checked={isLeave} />
+			</Col>
+			<Col>
+				<Input disabled={!isLeave} type="select" bind:value={attendance.Reason}>
+					<option value="SICKLEAVE">SICK LEAVE</option>
+					<option value="OFFICIALBUSINESS">OFFICIAL BUSINESS</option>
+					<option value="TRAININGLEAVE">TRAINING LEAVE</option>
+					<option value="SUBSTITUTION">SUBSTITUTION</option>
+				</Input>
+			</Col>
+		</Row>
 	</ModalBody>
 	<ModalFooter>
 		<Button outline color="secondary" on:click={clearVars}>Back</Button>

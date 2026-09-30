@@ -54,6 +54,7 @@ export interface AttendanceTime {
 export interface Attendance {
 	Date: DayDate
 	State: string
+	Reason: string
 	TimeIn: AttendanceTime
 	TimeOut: AttendanceTime
 	Suspended: string[]

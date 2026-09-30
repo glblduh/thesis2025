@@ -211,9 +211,13 @@ func createAttendanceStruct(attendanceDayBucket *bbolt.Bucket, date dayDate, day
 		return attendanceStruct, nil
 	}
 
-	if attendanceDayBucket != nil && attendanceDayBucket.Get([]byte("LEAVE")) != nil {
-		attendanceStruct.State = LEAVE
-		return attendanceStruct, nil
+	if attendanceDayBucket != nil {
+		leaveReason := attendanceDayBucket.Get([]byte("LEAVE"))
+		if leaveReason != nil {
+			attendanceStruct.State = LEAVE
+			attendanceStruct.Reason = LeaveReasons(string(leaveReason))
+			return attendanceStruct, nil
+		}
 	}
 
 	if attendanceDayBucket == nil && !daySchedule.DayOff {

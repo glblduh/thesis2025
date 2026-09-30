@@ -336,7 +336,7 @@ func updateAttendance(idNumber string, attendanceStruct attendance) error {
 		}
 
 		if attendanceStruct.State == LEAVE {
-			statePutErr := dayBucket.Put([]byte("LEAVE"), []byte(""))
+			statePutErr := dayBucket.Put([]byte("LEAVE"), []byte(string(LeaveReasons(attendanceStruct.Reason))))
 			if statePutErr != nil {
 				return statePutErr
 			}

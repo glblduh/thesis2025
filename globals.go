@@ -48,6 +48,7 @@ type SuspensionType string
 type UserType string
 type BucketNames string
 type AuthBucketNames string
+type LeaveReasons string
 
 const (
 	DAYOFF   AttendanceState = "DAYOFF"
@@ -74,6 +75,11 @@ const (
 	USERS_BUCKET           AuthBucketNames = "USERS"
 	USERS_PASSWORDS_BUCKET AuthBucketNames = "USERSPASSWORDS"
 	USERS_API_BUCKET       AuthBucketNames = "USERSAPIKEYS"
+
+	SICKLEAVE        LeaveReasons = "SICKLEAVE"
+	OFFICIALBUSINESS LeaveReasons = "OFFICIALBUSINESS"
+	TRAININGLEAVE    LeaveReasons = "TRAININGLEAVE"
+	SUBSTITUTION     LeaveReasons = "SUBSTITUTION"
 )
 
 type (
@@ -119,6 +125,7 @@ type (
 	attendance struct {
 		Date      dayDate
 		State     AttendanceState
+		Reason    LeaveReasons
 		TimeIn    attendanceTime
 		TimeOut   attendanceTime
 		Suspended []SuspensionType
@@ -210,7 +217,7 @@ type (
 	apiGetAttendanceRes struct {
 		IdNumber  int
 		State     AttendanceState
-		Reason    string
+		Reason    LeaveReasons
 		TimeIn    attendanceTime
 		TimeOut   attendanceTime
 		Suspended []SuspensionType

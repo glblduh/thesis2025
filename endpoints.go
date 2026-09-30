@@ -749,6 +749,7 @@ func apiGetCurrentDayAttendance(w http.ResponseWriter, r *http.Request) {
 	encodeRes(w, apiGetAttendanceRes{
 		IdNumber:  idNumberInt,
 		State:     employeeAttendance.State,
+		Reason:    employeeAttendance.Reason,
 		TimeIn:    employeeAttendance.TimeIn,
 		TimeOut:   employeeAttendance.TimeOut,
 		Suspended: employeeAttendance.Suspended,
