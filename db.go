@@ -384,7 +384,7 @@ func getAttendance(idNumber string, schoolYearString string, date dayDate) (atte
 	}
 	defer db.Close()
 
-	dbViewErr := db.View(func(tx *bbolt.Tx) error {
+	return attendanceStruct, db.View(func(tx *bbolt.Tx) error {
 		attendanceBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte(ATTENDANCE))
 		suspendedBucket := tx.Bucket([]byte(SUSPENDED))
 
@@ -430,11 +430,6 @@ func getAttendance(idNumber string, schoolYearString string, date dayDate) (atte
 
 		return nil
 	})
-	if dbViewErr != nil {
-		return attendanceStruct, dbViewErr
-	}
-
-	return attendanceStruct, nil
 }
 
 func getMonthAttendances(idNumber string, schoolYearString string, date dayDate) ([]attendance, error) {
@@ -713,7 +708,7 @@ func removeAttendance(idNumber string, date dayDate) error {
 	})
 }
 
-func checkAndAttend(idNumber string) (attend, error) {
+func attendEmployee(idNumber string) (attend, error) {
 	attend := attend{}
 
 	employeeStruct, verifyErr := getEmployee(idNumber)
@@ -971,4 +966,50 @@ func getAllSchoolYears(faculty bool, staff bool) ([]string, error) {
 	allSchoolYears = slices.Compact(allSchoolYears)
 
 	return allSchoolYears, dbViewErr
+}
+
+func currentDayAttendance(idNumber string) (attendance, error) {
+	attendanceStruct := attendance{}
+
+	employeeStruct, verifyErr := getEmployee(idNumber)
+	if verifyErr != nil {
+		return attendanceStruct, verifyErr
+	}
+
+	db, dbErr := openDB()
+	if dbErr != nil {
+		return attendanceStruct, dbErr
+	}
+	defer db.Close()
+
+	var currentSchoolYearString string
+	dbViewErr := db.View(func(tx *bbolt.Tx) error {
+		scheduleBucket := tx.Bucket([]byte(employeeStruct.EmployeeType)).Bucket([]byte(idNumber)).Bucket([]byte(SCHEDULE))
+
+		var getSchoolYearErr error
+		_, currentSchoolYearString, getSchoolYearErr = getLatestSchoolYear(scheduleBucket)
+		if getSchoolYearErr != nil {
+			return getSchoolYearErr
+		}
+		if currentSchoolYearString == "" {
+			return ErrYearNoSchoolYear
+		}
+
+		return nil
+	})
+	if dbViewErr != nil {
+		return attendanceStruct, dbViewErr
+	}
+	db.Close()
+
+	currentTime := time.Now()
+	currentDate := dayDate{
+		Year:  currentTime.Year(),
+		Month: int(currentTime.Month()),
+		Day:   currentTime.Day(),
+	}
+
+	var getAttendanceErr error
+	attendanceStruct, getAttendanceErr = getAttendance(idNumber, currentSchoolYearString, currentDate)
+	return attendanceStruct, getAttendanceErr
 }

@@ -44,6 +44,7 @@ func startHTTP() {
 	apiGetRouter.HandleFunc("/getallsuspended", apiGetAllSuspended)
 	apiGetRouter.HandleFunc("/getallmonthattendances/{schoolYear}/{year}/{month}", apiGetAllMonthAttendances)
 	apiGetRouter.HandleFunc("/getallschoolyears", apiGetAllSchoolYears)
+	apiGetRouter.HandleFunc("/getdayattendance/{idNumber}", apiGetCurrentDayAttendance)
 
 	svelteFS, fsErr := fs.Sub(svelteFiles, "web/dist")
 	if fsErr != nil {

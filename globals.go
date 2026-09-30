@@ -208,11 +208,12 @@ type (
 	}
 
 	apiGetAttendanceRes struct {
-		IdNumber int
-		State    AttendanceState
-		Reason   string
-		TimeIn   attendanceTime
-		TimeOut  attendanceTime
+		IdNumber  int
+		State     AttendanceState
+		Reason    string
+		TimeIn    attendanceTime
+		TimeOut   attendanceTime
+		Suspended []SuspensionType
 	}
 
 	apiGetMonthAttendancesRes struct {

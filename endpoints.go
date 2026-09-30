@@ -302,10 +302,11 @@ func apiGetAttendance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	encodeRes(w, apiGetAttendanceRes{
-		IdNumber: idNumberInt,
-		State:    employeeAttendance.State,
-		TimeIn:   employeeAttendance.TimeIn,
-		TimeOut:  employeeAttendance.TimeOut,
+		IdNumber:  idNumberInt,
+		State:     employeeAttendance.State,
+		TimeIn:    employeeAttendance.TimeIn,
+		TimeOut:   employeeAttendance.TimeOut,
+		Suspended: employeeAttendance.Suspended,
 	})
 }
 
@@ -511,7 +512,7 @@ func apiAttend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	attend, checkAttendErr := checkAndAttend(idNumber)
+	attend, checkAttendErr := attendEmployee(idNumber)
 	if checkAttendErr != nil {
 		errorRes(w, checkAttendErr.Error(), http.StatusInternalServerError)
 		return
@@ -710,4 +711,46 @@ func apiUserAuth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	encodeRes(w, userInfo)
+}
+
+func apiGetCurrentDayAttendance(w http.ResponseWriter, r *http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
+	httpVars := mux.Vars(r)
+
+	idNumber, httpVarUnescapeErr := url.QueryUnescape(httpVars["idNumber"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	idNumberInt, convertErr := strconv.Atoi(idNumber)
+	if convertErr != nil {
+		errorRes(w, convertErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if accessTypeIDMatch(w, userType, idNumberInt) != nil {
+		return
+	}
+
+	employeeAttendance, getAttendanceErr := currentDayAttendance(idNumber)
+	if getAttendanceErr == ErrDayNotFound {
+		errorRes(w, getAttendanceErr.Error(), http.StatusNotFound)
+		return
+	}
+	if getAttendanceErr != nil {
+		errorRes(w, getAttendanceErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	encodeRes(w, apiGetAttendanceRes{
+		IdNumber:  idNumberInt,
+		State:     employeeAttendance.State,
+		TimeIn:    employeeAttendance.TimeIn,
+		TimeOut:   employeeAttendance.TimeOut,
+		Suspended: employeeAttendance.Suspended,
+	})
 }
