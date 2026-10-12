@@ -1033,7 +1033,7 @@ func updateHardwareID(id hardwareID) error {
 	return db.Update(func(tx *bbolt.Tx) error {
 		hardwareIDBucket := tx.Bucket([]byte(HARDWARE_ID))
 
-		userBucket, bucketCreateErr := hardwareIDBucket.CreateBucketIfNotExists([]byte(strconv.Itoa(employeeStruct.IdNumber)))
+		userBucket, bucketCreateErr := hardwareIDBucket.CreateBucketIfNotExists([]byte(employeeStruct.IdNumberString))
 		if bucketCreateErr != nil {
 			return bucketCreateErr
 		}
@@ -1053,7 +1053,7 @@ func updateHardwareID(id hardwareID) error {
 }
 
 func removeHardwareID(idNumber string) error {
-	employeeStruct, verifyErr := getEmployee(idNumber)
+	_, verifyErr := getEmployee(idNumber)
 	if verifyErr != nil {
 		return verifyErr
 	}
@@ -1066,14 +1066,14 @@ func removeHardwareID(idNumber string) error {
 
 	return db.Update(func(tx *bbolt.Tx) error {
 		hardwareIDBucket := tx.Bucket([]byte(HARDWARE_ID))
-		return hardwareIDBucket.DeleteBucket([]byte(strconv.Itoa(employeeStruct.IdNumber)))
+		return hardwareIDBucket.DeleteBucket([]byte(idNumber))
 	})
 }
 
 func getHardwareID(idNumber string) (hardwareID, error) {
 	hardwareIDStruct := hardwareID{}
 
-	employeeStruct, verifyErr := getEmployee(idNumber)
+	_, verifyErr := getEmployee(idNumber)
 	if verifyErr != nil {
 		return hardwareIDStruct, verifyErr
 	}
@@ -1087,7 +1087,7 @@ func getHardwareID(idNumber string) (hardwareID, error) {
 	return hardwareIDStruct, db.View(func(tx *bbolt.Tx) error {
 		hardwareIDBucket := tx.Bucket([]byte(HARDWARE_ID))
 
-		userBucket := hardwareIDBucket.Bucket([]byte(strconv.Itoa(employeeStruct.IdNumber)))
+		userBucket := hardwareIDBucket.Bucket([]byte(idNumber))
 		if userBucket == nil {
 			return ErrIdNumberNotFound
 		}

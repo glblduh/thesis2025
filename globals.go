@@ -116,12 +116,13 @@ type (
 	}
 
 	employee struct {
-		IdNumber     int
-		IsFaculty    bool
-		EmployeeType UserType
-		FirstName    string
-		MiddleName   string
-		LastName     string
+		IdNumber       int
+		IdNumberString string
+		IsFaculty      bool
+		EmployeeType   UserType
+		FirstName      string
+		MiddleName     string
+		LastName       string
 	}
 
 	attendanceTime struct {

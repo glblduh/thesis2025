@@ -54,12 +54,13 @@ func writeDaySchedule(schoolYearBucket *bbolt.Bucket, dayName string, daySchedul
 
 func employeeInfoDBToStruct(employeeBucket *bbolt.Bucket, idNumber int, isFaculty bool) employee {
 	return employee{
-		IdNumber:     idNumber,
-		IsFaculty:    isFaculty,
-		EmployeeType: UserType(employeeBucket.Get([]byte("EmployeeType"))),
-		FirstName:    string(employeeBucket.Get([]byte("FirstName"))),
-		MiddleName:   string(employeeBucket.Get([]byte("MiddleName"))),
-		LastName:     string(employeeBucket.Get([]byte("LastName"))),
+		IdNumber:       idNumber,
+		IdNumberString: strconv.Itoa(idNumber),
+		IsFaculty:      isFaculty,
+		EmployeeType:   UserType(employeeBucket.Get([]byte("EmployeeType"))),
+		FirstName:      string(employeeBucket.Get([]byte("FirstName"))),
+		MiddleName:     string(employeeBucket.Get([]byte("MiddleName"))),
+		LastName:       string(employeeBucket.Get([]byte("LastName"))),
 	}
 }
 
