@@ -755,3 +755,79 @@ func apiGetCurrentDayAttendance(w http.ResponseWriter, r *http.Request) {
 		Suspended: employeeAttendance.Suspended,
 	})
 }
+
+func apiUpdateHardwareID(w http.ResponseWriter, r *http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
+	body := hardwareID{}
+
+	if accessTypeIDMatch(w, userType, body.IdNumber) != nil {
+		return
+	}
+
+	updateHardwareIDErr := updateHardwareID(body)
+	if updateHardwareIDErr != nil {
+		errorRes(w, updateHardwareIDErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	encodeRes(w, body)
+}
+
+func apiRemoveHardwareID(w http.ResponseWriter, r *http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
+	body := apiRemoveHardwareIDBody{}
+	if decodeBody(w, r.Body, &body, false) != nil {
+		return
+	}
+
+	if accessTypeIDMatch(w, userType, body.IdNumber) != nil {
+		return
+	}
+
+	removeHardwareIDErr := removeHardwareID(strconv.Itoa(body.IdNumber))
+	if removeHardwareIDErr != nil {
+		errorRes(w, removeHardwareIDErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	encodeRes(w, body)
+}
+
+func apiGetHardwareID(w http.ResponseWriter, r *http.Request) {
+	userType, getUserTypeErr := getContextUserType(w, r)
+	if getUserTypeErr != nil {
+		return
+	}
+
+	httpVars := mux.Vars(r)
+	idNumber, httpVarUnescapeErr := url.QueryUnescape(httpVars["idNumber"])
+	if httpVarUnescapeErr != nil {
+		errorRes(w, httpVarUnescapeErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	idNumberInt, convertErr := strconv.Atoi(idNumber)
+	if convertErr != nil {
+		errorRes(w, convertErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if accessTypeIDMatch(w, userType, idNumberInt) != nil {
+		return
+	}
+
+	hardwareIDStruct, getHardwareIDErr := getHardwareID(idNumber)
+	if getHardwareIDErr != nil {
+		errorRes(w, getHardwareIDErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	encodeRes(w, hardwareIDStruct)
+}

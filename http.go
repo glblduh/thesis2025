@@ -27,11 +27,13 @@ func startHTTP() {
 	apiPostRouter.HandleFunc("/updateattendance", apiUpdateAttendance)
 	apiPostRouter.HandleFunc("/attend/{idNumber}", apiAttend)
 	apiPostRouter.HandleFunc("/updatesuspended", apiUpdateSuspended)
+	apiPostRouter.HandleFunc("/updatehardwareid", apiUpdateHardwareID)
 
 	apiDeleteRouter.HandleFunc("/removeemployee", apiRemoveEmployee)
 	apiDeleteRouter.HandleFunc("/removeschedule", apiRemoveSchedule)
 	apiDeleteRouter.HandleFunc("/removeattendance", apiRemoveAttendance)
 	apiDeleteRouter.HandleFunc("/removesuspended", apiRemoveSuspended)
+	apiDeleteRouter.HandleFunc("/removehardwareid", apiRemoveHardwareID)
 
 	apiGetRouter.HandleFunc("/getallschedule/{idNumber}", apiGetAllYearsSchedule)
 	apiGetRouter.HandleFunc("/getschedule/{idNumber}/{schoolYear}", apiGetSchedule)
@@ -45,6 +47,7 @@ func startHTTP() {
 	apiGetRouter.HandleFunc("/getallmonthattendances/{schoolYear}/{year}/{month}", apiGetAllMonthAttendances)
 	apiGetRouter.HandleFunc("/getallschoolyears", apiGetAllSchoolYears)
 	apiGetRouter.HandleFunc("/getdayattendance/{idNumber}", apiGetCurrentDayAttendance)
+	apiGetRouter.HandleFunc("/gethardwareid/{idNumber}", apiGetHardwareID)
 
 	svelteFS, fsErr := fs.Sub(svelteFiles, "web/dist")
 	if fsErr != nil {

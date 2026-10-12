@@ -37,6 +37,10 @@ func initializeDB() {
 		if suspendedCreateErr != nil {
 			Error.Fatalln("Suspended bucket creation error")
 		}
+		_, hardwareIDCreateErr := tx.CreateBucketIfNotExists([]byte(HARDWARE_ID))
+		if hardwareIDCreateErr != nil {
+			Error.Fatalln("Hardware ID bucket creation error")
+		}
 		return nil
 	})
 
@@ -1012,4 +1016,96 @@ func currentDayAttendance(idNumber string) (attendance, error) {
 	var getAttendanceErr error
 	attendanceStruct, getAttendanceErr = getAttendance(idNumber, currentSchoolYearString, currentDate)
 	return attendanceStruct, getAttendanceErr
+}
+
+func updateHardwareID(id hardwareID) error {
+	employeeStruct, verifyErr := getEmployee(strconv.Itoa(id.IdNumber))
+	if verifyErr != nil {
+		return verifyErr
+	}
+
+	db, dbErr := openDB()
+	if dbErr != nil {
+		return dbErr
+	}
+	defer db.Close()
+
+	return db.Update(func(tx *bbolt.Tx) error {
+		hardwareIDBucket := tx.Bucket([]byte(HARDWARE_ID))
+
+		userBucket, bucketCreateErr := hardwareIDBucket.CreateBucketIfNotExists([]byte(strconv.Itoa(employeeStruct.IdNumber)))
+		if bucketCreateErr != nil {
+			return bucketCreateErr
+		}
+
+		rfidTagIDPutErr := userBucket.Put([]byte(RFID_TAG_ID), []byte(id.RFIDTagID))
+		if rfidTagIDPutErr != nil {
+			return rfidTagIDPutErr
+		}
+
+		biometricIDPutErr := userBucket.Put([]byte(BIOMETRIC_ID), []byte(id.BiometricID))
+		if biometricIDPutErr != nil {
+			return biometricIDPutErr
+		}
+
+		return nil
+	})
+}
+
+func removeHardwareID(idNumber string) error {
+	employeeStruct, verifyErr := getEmployee(idNumber)
+	if verifyErr != nil {
+		return verifyErr
+	}
+
+	db, dbErr := openDB()
+	if dbErr != nil {
+		return dbErr
+	}
+	defer db.Close()
+
+	return db.Update(func(tx *bbolt.Tx) error {
+		hardwareIDBucket := tx.Bucket([]byte(HARDWARE_ID))
+		return hardwareIDBucket.DeleteBucket([]byte(strconv.Itoa(employeeStruct.IdNumber)))
+	})
+}
+
+func getHardwareID(idNumber string) (hardwareID, error) {
+	hardwareIDStruct := hardwareID{}
+
+	employeeStruct, verifyErr := getEmployee(idNumber)
+	if verifyErr != nil {
+		return hardwareIDStruct, verifyErr
+	}
+
+	db, dbErr := openDB()
+	if dbErr != nil {
+		return hardwareIDStruct, dbErr
+	}
+	defer db.Close()
+
+	return hardwareIDStruct, db.View(func(tx *bbolt.Tx) error {
+		hardwareIDBucket := tx.Bucket([]byte(HARDWARE_ID))
+
+		userBucket := hardwareIDBucket.Bucket([]byte(strconv.Itoa(employeeStruct.IdNumber)))
+		if userBucket == nil {
+			return ErrIdNumberNotFound
+		}
+
+		rfidTagIDByte := userBucket.Get([]byte(RFID_TAG_ID))
+		if rfidTagIDByte == nil {
+			return ErrRFIDTagIdNotFound
+		}
+
+		hardwareIDStruct.RFIDTagID = string(rfidTagIDByte)
+
+		biometricIDByte := userBucket.Get([]byte(BIOMETRIC_ID))
+		if biometricIDByte == nil {
+			return ErrBiometricIdNotFound
+		}
+
+		hardwareIDStruct.BiometricID = string(biometricIDByte)
+
+		return nil
+	})
 }

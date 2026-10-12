@@ -40,6 +40,9 @@ var (
 	ErrAuthUnauthorized    = errors.New("unauthorized")
 	ErrAuthInvalidUserType = errors.New("invalid user type")
 	ErrAuthForbidden       = errors.New("request forbidden")
+
+	ErrRFIDTagIdNotFound   = errors.New("rfid tag id not found")
+	ErrBiometricIdNotFound = errors.New("biometric id not found")
 )
 
 type AttendanceState string
@@ -49,6 +52,7 @@ type UserType string
 type BucketNames string
 type AuthBucketNames string
 type LeaveReasons string
+type HardwareIDType string
 
 const (
 	DAYOFF   AttendanceState = "DAYOFF"
@@ -68,9 +72,10 @@ const (
 	STAFF   UserType = "STAFF"
 	API     UserType = "API"
 
-	SCHEDULE   BucketNames = "SCHEDULE"
-	ATTENDANCE BucketNames = "ATTENDANCE"
-	SUSPENDED  BucketNames = "SUSPENDED"
+	SCHEDULE    BucketNames = "SCHEDULE"
+	ATTENDANCE  BucketNames = "ATTENDANCE"
+	SUSPENDED   BucketNames = "SUSPENDED"
+	HARDWARE_ID BucketNames = "HARDWARE_ID"
 
 	USERS_BUCKET           AuthBucketNames = "USERS"
 	USERS_PASSWORDS_BUCKET AuthBucketNames = "USERSPASSWORDS"
@@ -80,6 +85,9 @@ const (
 	OFFICIALBUSINESS LeaveReasons = "OFFICIALBUSINESS"
 	TRAININGLEAVE    LeaveReasons = "TRAININGLEAVE"
 	SUBSTITUTION     LeaveReasons = "SUBSTITUTION"
+
+	RFID_TAG_ID  HardwareIDType = "RFID_TAG_ID"
+	BIOMETRIC_ID HardwareIDType = "BIOMETRIC_ID"
 )
 
 type (
@@ -169,6 +177,12 @@ type (
 		Username string
 		Type     UserType
 		Key      string
+	}
+
+	hardwareID struct {
+		IdNumber    int
+		RFIDTagID   string
+		BiometricID string
 	}
 )
 
@@ -270,5 +284,9 @@ type (
 	apiUserAuthBody struct {
 		Username string
 		Password string
+	}
+
+	apiRemoveHardwareIDBody struct {
+		IdNumber int
 	}
 )
