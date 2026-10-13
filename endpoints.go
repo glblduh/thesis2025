@@ -763,6 +763,9 @@ func apiUpdateHardwareID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body := hardwareID{}
+	if decodeBody(w, r.Body, &body, false) != nil {
+		return
+	}
 
 	if accessTypeIDMatch(w, userType, body.IdNumber) != nil {
 		return
