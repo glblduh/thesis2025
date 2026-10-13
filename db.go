@@ -1073,7 +1073,7 @@ func removeHardwareID(idNumber string) error {
 func getHardwareID(idNumber string) (hardwareID, error) {
 	hardwareIDStruct := hardwareID{}
 
-	_, verifyErr := getEmployee(idNumber)
+	employeeStruct, verifyErr := getEmployee(idNumber)
 	if verifyErr != nil {
 		return hardwareIDStruct, verifyErr
 	}
@@ -1091,6 +1091,8 @@ func getHardwareID(idNumber string) (hardwareID, error) {
 		if userBucket == nil {
 			return ErrIdNumberNotFound
 		}
+
+		hardwareIDStruct.IdNumber = employeeStruct.IdNumber
 
 		rfidTagIDByte := userBucket.Get([]byte(RFID_TAG_ID))
 		if rfidTagIDByte == nil {
